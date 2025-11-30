@@ -28,7 +28,11 @@ namespace GTAVInjector
             StartVersionMonitoring();
             
             // Mover la llamada a UpdateUI() al evento Loaded para asegurar que los controles estén inicializados
-            Loaded += (s, e) => UpdateUI();
+            Loaded += (s, e) => 
+            {
+                UpdateUI();
+                UpdateVersionText();
+            };
         }
 
         private void LoadSettings()
@@ -107,6 +111,14 @@ namespace GTAVInjector
             {
                 VersionStatusText.Text = LocalizationManager.GetString("UpdateCheckFailed");
                 VersionStatusText.Foreground = System.Windows.Media.Brushes.Gray;
+            }
+        }
+
+        private void UpdateVersionText()
+        {
+            if (VersionText != null)
+            {
+                VersionText.Text = $"v{VersionChecker.GetCurrentVersion()}";
             }
         }
 

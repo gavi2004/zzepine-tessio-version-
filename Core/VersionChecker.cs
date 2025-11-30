@@ -16,12 +16,29 @@ namespace GTAVInjector.Core
     public static class VersionChecker
     {
         private const string VERSION_JSON_URL = "https://raw.githubusercontent.com/zzepine/tessio-version/main/version.json";
-        private const string CURRENT_VERSION = "2.0.0";
         private const string TESSIO_DISCORD_URL = "https://discord.gg/tessioScript";
+        
+        private static string? _currentVersion;
 
         private static string? _latestVersion;
         private static bool _isOutdated = false;
         private static readonly HttpClient _httpClient = new();
+
+        private static string GetCurrentVersionFromFile()
+        {
+            if (_currentVersion == null)
+            {
+                try
+                {
+                    _currentVersion = File.ReadAllText("version.txt").Trim();
+                }
+                catch
+                {
+                    _currentVersion = "2.0.0"; // Fallback version
+                }
+            }
+            return _currentVersion;
+        }
 
         public static async Task<bool> CheckForUpdatesAsync()
         {
@@ -35,7 +52,7 @@ namespace GTAVInjector.Core
                     _latestVersion = versionInfo.Version;
                     
                     // Comparar versiones
-                    var current = new Version(CURRENT_VERSION);
+                    var current = new Version(GetCurrentVersionFromFile());
                     var latest = new Version(_latestVersion);
 
                     _isOutdated = latest > current;
@@ -68,7 +85,7 @@ namespace GTAVInjector.Core
 
         public static string GetCurrentVersion()
         {
-            return CURRENT_VERSION;
+            return GetCurrentVersionFromFile();
         }
 
         public static string? GetLatestVersion()
