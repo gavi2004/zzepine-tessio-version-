@@ -1,2 +1,0 @@
-E:\gta v imyector\GTAV-Injector\GTAV-Injector\new\bin\Release\net8.0-windows\win-x64\publish\GTAV-Injector.pdb
-E:\gta v imyector\GTAV-Injector\GTAV-Injector\new\bin\Release\net8.0-windows\win-x64\publish\GTAV-Injector.exe
