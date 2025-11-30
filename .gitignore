@@ -14,6 +14,11 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Executables grandes (evitar límite de 100MB de GitHub)
+*.exe
+publish/
+win-x64/
+
 # Specific large files
 *.exe
 *.dll
