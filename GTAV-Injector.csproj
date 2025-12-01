@@ -11,7 +11,11 @@
     <ApplicationIcon>tessiox.ico</ApplicationIcon>
     <AssemblyName>GTAV-Injector</AssemblyName>
     <RootNamespace>GTAVInjector</RootNamespace>
+<<<<<<< HEAD
     <Version>2.0.0</Version>
+=======
+    <VersionPrefix>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\version.txt').Trim())</VersionPrefix>
+>>>>>>> 1f394c95213f1ee770ede05d45e7b1433d30f568
     <Authors>Reisita</Authors>
     <Company>GGS Team</Company>
     <Product>GTAV Injector Enhanced</Product>
@@ -28,6 +32,15 @@
   </ItemGroup>
 
   <ItemGroup>
+<<<<<<< HEAD
+=======
+    <None Include="version.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+>>>>>>> 1f394c95213f1ee770ede05d45e7b1433d30f568
     <Resource Include="logo.png" />
     <Resource Include="tiktok.png" />
     <Resource Include="twitch.png" />

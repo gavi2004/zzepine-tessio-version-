@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+<<<<<<< HEAD
 using System.Text.Json;
 
 namespace GTAVInjector.Core
@@ -18,16 +19,47 @@ namespace GTAVInjector.Core
         private const string VERSION_JSON_URL = "https://raw.githubusercontent.com/zzepine/tessio-version/main/version.json";
         private const string CURRENT_VERSION = "2.0.1";
         private const string TESSIO_DISCORD_URL = "https://discord.gg/tessioScript";
+=======
+
+namespace GTAVInjector.Core
+{
+    public static class VersionChecker
+    {
+        private const string VERSION_JSON_URL = "https://raw.githubusercontent.com/gavi2004/zzepine-tessio-version-/main/version.txt";
+        private const string TESSIO_DISCORD_URL = "https://discord.gg/tessioScript";
+        
+        private static string? _currentVersion;
+>>>>>>> 1f394c95213f1ee770ede05d45e7b1433d30f568
 
         private static string? _latestVersion;
         private static bool _isOutdated = false;
         private static readonly HttpClient _httpClient = new();
 
+<<<<<<< HEAD
+=======
+        private static string GetCurrentVersionFromFile()
+        {
+            if (_currentVersion == null)
+            {
+                try
+                {
+                    _currentVersion = File.ReadAllText("version.txt").Trim();
+                }
+                catch
+                {
+                    _currentVersion = "2.0.0"; // Fallback version
+                }
+            }
+            return _currentVersion;
+        }
+
+>>>>>>> 1f394c95213f1ee770ede05d45e7b1433d30f568
         public static async Task<bool> CheckForUpdatesAsync()
         {
             try
             {
                 var response = await _httpClient.GetStringAsync(VERSION_JSON_URL);
+<<<<<<< HEAD
                 var versionInfo = JsonSerializer.Deserialize<VersionInfo>(response);
 
                 if (versionInfo != null && !string.IsNullOrEmpty(versionInfo.Version))
@@ -36,6 +68,15 @@ namespace GTAVInjector.Core
                     
                     // Comparar versiones
                     var current = new Version(CURRENT_VERSION);
+=======
+                _latestVersion = response.Trim();
+
+                if (!string.IsNullOrEmpty(_latestVersion))
+                {
+                    
+                    // Comparar versiones
+                    var current = new Version(GetCurrentVersionFromFile());
+>>>>>>> 1f394c95213f1ee770ede05d45e7b1433d30f568
                     var latest = new Version(_latestVersion);
 
                     _isOutdated = latest > current;
@@ -68,7 +109,11 @@ namespace GTAVInjector.Core
 
         public static string GetCurrentVersion()
         {
+<<<<<<< HEAD
             return CURRENT_VERSION;
+=======
+            return GetCurrentVersionFromFile();
+>>>>>>> 1f394c95213f1ee770ede05d45e7b1433d30f568
         }
 
         public static string? GetLatestVersion()
