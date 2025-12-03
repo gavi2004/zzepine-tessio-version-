@@ -11,7 +11,7 @@
         Background="Transparent"
         AllowsTransparency="True"
         WindowStyle="None"
-        ResizeMode="CanResize">
+        ResizeMode="CanMinimize">
     
     <Window.Resources>
         <!-- Animación de parallax -->
@@ -31,7 +31,7 @@
         </EventTrigger>
     </Window.Triggers>
     
-    <Border BorderBrush="{StaticResource PrimaryColor}" BorderThickness="1.5" CornerRadius="12">
+    <Border BorderBrush="{StaticResource PrimaryColor}" BorderThickness="2" CornerRadius="12">
         <Grid>
             <!-- Fondo animado con parallax -->
             <Canvas ClipToBounds="True">
@@ -67,7 +67,8 @@
                 </Grid.RowDefinitions>
                 
                 <!-- Barra de título personalizada -->
-                <Grid Grid.Row="0" Background="#1A0128" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Border Grid.Row="0" Background="#1A0128" CornerRadius="10,10,0,0" Margin="0">
+                    <Grid MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
@@ -96,10 +97,10 @@
                     <!-- Botones de ventana -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal">
                         <Button Content="─" Style="{StaticResource WindowButton}" Click="Minimize_Click"/>
-                        <Button Content="☐" Style="{StaticResource WindowButton}" Click="Maximize_Click"/>
                         <Button Content="✕" Style="{StaticResource CloseButton}" Click="Close_Click"/>
                     </StackPanel>
-                </Grid>
+                    </Grid>
+                </Border>
                 
                 <!-- Contenido principal -->
                 <Grid Grid.Row="1" Margin="20">
@@ -132,9 +133,10 @@
                                      Content="Auto-Inject on game start" Foreground="#FFFFFF"
                                      Checked="AutoInject_Changed" Unchecked="AutoInject_Changed"/>
                             
-                            <!-- Lista de DLLs -->
-                            <ListView x:Name="DllListView" Grid.Row="2" Background="#15011E" 
-                                     BorderThickness="0" Margin="0,0,0,10">
+                            <!-- Lista de DLLs con ScrollViewer -->
+                            <ScrollViewer Grid.Row="2" Margin="0,0,0,10" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <ListView x:Name="DllListView" Background="#15011E" 
+                                         BorderThickness="0">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Margin="5">
@@ -170,7 +172,8 @@
                                         </Grid>
                                     </DataTemplate>
                                 </ListView.ItemTemplate>
-                            </ListView>
+                                </ListView>
+                            </ScrollViewer>
                             
                             <!-- Botones de acción -->
                             <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
@@ -230,7 +233,7 @@
                                             Foreground="#FFFFFF" Margin="0,5" GroupName="Launcher" 
                                             Checked="Launcher_Changed"/>
                                 
-                                <Separator Margin="0,15" Background="#444"/>
+                                <Separator Margin="0,15" Background="#A946FF"/>
                                 
                                 <!-- Redes Sociales -->
                                 <TextBlock x:Name="SocialMediaTitle" Text="Social Media" FontWeight="Bold" 
@@ -258,7 +261,7 @@
                                     </Button>
                                 </StackPanel>
                                 
-                                <Separator Margin="0,0,0,15" Background="#444"/>
+                                <Separator Margin="0,0,0,15" Background="#A946FF"/>
                                 
                                 <!-- Requisitos -->
                                 <TextBlock x:Name="RequirementsTitle" Text="Requirements" FontWeight="Bold" 
@@ -286,7 +289,7 @@
                 </Grid>
                 
                 <!-- Barra de estado -->
-                <Border Grid.Row="2" Background="#15011E" CornerRadius="8" Padding="12,6">
+                <Border Grid.Row="2" Background="#15011E" CornerRadius="0,0,10,10" Padding="12,6" Margin="0">
                     <Grid>
                         <TextBlock x:Name="StatusText" Text="Ready" Foreground="#FF9EFF" 
                                   VerticalAlignment="Center"/>

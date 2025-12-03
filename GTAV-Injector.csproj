@@ -16,6 +16,9 @@
     <Company>GGS Team</Company>
     <Product>GTAV Injector Enhanced</Product>
     <Description>Advanced GTA V DLL Injector with auto-injection and version control</Description>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
