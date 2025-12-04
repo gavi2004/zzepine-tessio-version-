@@ -32,7 +32,7 @@
     </Window.Triggers>
 
     <Border BorderBrush="{StaticResource PrimaryColor}" BorderThickness="2" CornerRadius="12">
-        <Grid>
+        <Grid MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <!-- Fondo animado con parallax -->
             <Canvas ClipToBounds="True">
                 <Canvas.Background>
@@ -68,7 +68,7 @@
                 
                 <!-- Barra de título personalizada -->
                 <Border Grid.Row="0" Background="#1A0128" CornerRadius="12,12,0,0" Margin="0">
-                    <Grid MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                    <Grid>
                         <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
@@ -98,6 +98,116 @@
                                           Padding="4,0" FontWeight="SemiBold" BorderThickness="1"
                                           FocusVisualStyle="{x:Null}"
                                           SelectionChanged="LanguageSelector_SelectionChanged">
+                                    <ComboBox.Style>
+                                        <Style TargetType="ComboBox">
+                                            <Setter Property="Background" Value="#3B0F4D"/>
+                                            <Setter Property="BorderBrush" Value="#FF9EFF"/>
+                                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ComboBox">
+                                                        <Border x:Name="MainBorder"
+                                                                Background="{TemplateBinding Background}"
+                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                                CornerRadius="4">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="20"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                
+                                                                <ContentPresenter Grid.Column="0"
+                                                                                x:Name="ContentSite"
+                                                                                Content="{TemplateBinding SelectionBoxItem}"
+                                                                                ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                                                IsHitTestVisible="False"
+                                                                                Margin="{TemplateBinding Padding}"
+                                                                                VerticalAlignment="Center"
+                                                                                HorizontalAlignment="Left"
+                                                                                TextElement.Foreground="{TemplateBinding Foreground}"/>
+                                                                
+                                                                <ToggleButton Grid.Column="1"
+                                                                            x:Name="ToggleButton"
+                                                                            Background="Transparent"
+                                                                            BorderBrush="Transparent"
+                                                                            BorderThickness="0"
+                                                                            Focusable="False"
+                                                                            IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                                                            ClickMode="Press">
+                                                                    <Path Fill="#FFFFFF"
+                                                                          Data="M0,0 L4,4 L8,0 Z"
+                                                                          HorizontalAlignment="Center"
+                                                                          VerticalAlignment="Center"/>
+                                                                </ToggleButton>
+                                                                
+                                                                <Popup x:Name="Popup"
+                                                                     Placement="Bottom"
+                                                                     IsOpen="{TemplateBinding IsDropDownOpen}"
+                                                                     AllowsTransparency="True"
+                                                                     Focusable="False"
+                                                                     PopupAnimation="Slide">
+                                                                    <Grid MinWidth="{TemplateBinding ActualWidth}">
+                                                                        <Border Background="#3B0F4D"
+                                                                              BorderBrush="#FF9EFF"
+                                                                              BorderThickness="1"
+                                                                              CornerRadius="4"
+                                                                              Padding="0,4">
+                                                                            <ScrollViewer x:Name="DropDownScrollViewer">
+                                                                                <StackPanel IsItemsHost="True"/>
+                                                                            </ScrollViewer>
+                                                                        </Border>
+                                                                    </Grid>
+                                                                </Popup>
+                                                            </Grid>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="MainBorder" Property="Background" Value="#3B0F4D"/>
+                                                                <Setter TargetName="MainBorder" Property="BorderBrush" Value="#FF9EFF"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsFocused" Value="True">
+                                                                <Setter TargetName="MainBorder" Property="Background" Value="#3B0F4D"/>
+                                                                <Setter TargetName="MainBorder" Property="BorderBrush" Value="#FF9EFF"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ComboBox.Style>
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                                            <Setter Property="Padding" Value="8,4"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ComboBoxItem">
+                                                        <Border x:Name="ItemBorder"
+                                                                Background="Transparent"
+                                                                BorderThickness="0"
+                                                                Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Left"
+                                                                            VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsHighlighted" Value="True">
+                                                                <Setter TargetName="ItemBorder" Property="Background" Value="Transparent"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsSelected" Value="True">
+                                                                <Setter TargetName="ItemBorder" Property="Background" Value="Transparent"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="ItemBorder" Property="Background" Value="Transparent"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
                                     <ComboBoxItem Content="🇺🇸 English" Tag="en"/>
                                     <ComboBoxItem Content="🇪🇸 Español" Tag="es" IsSelected="True"/>
                                 </ComboBox>
@@ -147,7 +257,31 @@
                             <!-- Lista de DLLs con ScrollViewer -->
                             <ScrollViewer Grid.Row="2" Margin="0,0,0,10" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                 <ListView x:Name="DllListView" Background="#15011E" 
-                                         BorderThickness="0">
+                                         BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                    <ListView.ItemContainerStyle>
+                                        <Style TargetType="ListViewItem">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListViewItem">
+                                                        <Border Background="{TemplateBinding Background}"
+                                                                BorderThickness="0"
+                                                                Margin="2,1">
+                                                            <ContentPresenter/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsSelected" Value="True">
+                                                                <Setter Property="Background" Value="Transparent"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter Property="Background" Value="Transparent"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListView.ItemContainerStyle>
                                     <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Margin="5">
@@ -200,12 +334,8 @@
                     
                     <!-- Panel derecho - Configuración -->
                     <Border Grid.Column="2" Background="#1F012F" CornerRadius="12" Padding="18">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <StackPanel Grid.Row="0">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel>
                                 <!-- Estatus de versión -->
                                 <Border Background="#15011E" CornerRadius="8" Padding="12" Margin="0,0,0,15">
                                     <StackPanel>
@@ -286,16 +416,16 @@
                                         <TextBlock Text="• Administrator rights" Foreground="#D3B4FF" FontSize="11" Margin="0,2"/>
                                     </StackPanel>
                                 </Border>
-                            </StackPanel>
                             
-                            <!-- Imagen destacada -->
-                            <Border Grid.Row="1" Background="#15011E" CornerRadius="10" Padding="10" Margin="0,12,0,0">
-                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
-                                    <Image Source="pack://application:,,,/Resources/logo tessio.png" Height="200" Width="200" Stretch="Uniform"
-                                           RenderOptions.BitmapScalingMode="HighQuality" SnapsToDevicePixels="True"/>
-                                </Viewbox>
-                            </Border>
-                        </Grid>
+                                <!-- Imagen destacada -->
+                                <Border Background="#15011E" CornerRadius="10" Padding="10" Margin="0,15,0,0">
+                                    <Viewbox Stretch="Uniform" StretchDirection="DownOnly" MaxHeight="150">
+                                        <Image Source="pack://application:,,,/Resources/logo tessio.png" Height="150" Width="150" Stretch="Uniform"
+                                               RenderOptions.BitmapScalingMode="HighQuality" SnapsToDevicePixels="True"/>
+                                    </Viewbox>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
                     </Border>
                 </Grid>
                 
