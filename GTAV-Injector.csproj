@@ -21,6 +21,8 @@
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
 	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+	<PublishTrimmed>false</PublishTrimmed>
+	<RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>

@@ -225,9 +225,12 @@ namespace GTAVInjector
                 if (VersionStatusTitle != null) VersionStatusTitle.Text = LocalizationManager.GetString("VersionStatus");
                 if (UpdateButton != null) UpdateButton.Content = LocalizationManager.GetString("UpdateAvailable");
                 
+                // Actualizar botones "Remove" en la lista de DLLs
+                UpdateRemoveButtonsText();
+                
                 // Actualizar StatusText según idioma
-                var currentLang = SettingsManager.Settings.Language;
-                if (currentLang == "es")
+                var currentLang = LocalizationManager.CurrentLanguage;
+                if (currentLang.ToLower() == "es")
                 {
                     if (StatusText != null && (StatusText.Text == "Ready" || StatusText.Text == "Listo"))
                         StatusText.Text = "Listo";
@@ -243,6 +246,98 @@ namespace GTAVInjector
                 // Registrar el error para depuración
                 System.Diagnostics.Debug.WriteLine($"Error en UpdateUI: {ex.Message}");
             }
+        }
+
+        private void UpdateRemoveButtonsText()
+        {
+            try
+            {
+                // Obtener idioma directamente del ComboBox seleccionado
+                string currentLang = "en";
+                if (LanguageSelector?.SelectedItem is System.Windows.Controls.ComboBoxItem selectedItem)
+                {
+                    currentLang = selectedItem.Tag?.ToString() ?? "en";
+                }
+                
+                var removeText = currentLang.ToLower() == "es" ? "Quitar" : "Remove";
+                
+                System.Diagnostics.Debug.WriteLine($"Idioma detectado: {currentLang}, Texto del botón: {removeText}");
+                
+                // Forzar regeneración completa del ListView
+                if (DllListView != null && DllListView.ItemsSource != null)
+                {
+                    var items = DllListView.ItemsSource;
+                    DllListView.ItemsSource = null;
+                    
+                    // Actualizar el texto por defecto en el XAML
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        DllListView.ItemsSource = items;
+                        
+                        // Esperar a que se regeneren los items y luego actualizar
+                        Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            UpdateVisualRemoveButtons(removeText);
+                        }), System.Windows.Threading.DispatcherPriority.Loaded);
+                    }), System.Windows.Threading.DispatcherPriority.Loaded);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error en UpdateRemoveButtonsText: {ex.Message}");
+            }
+        }
+
+        private void UpdateVisualRemoveButtons(string text)
+        {
+            try
+            {
+                if (DllListView == null) return;
+                
+                for (int i = 0; i < DllListView.Items.Count; i++)
+                {
+                    var container = DllListView.ItemContainerGenerator.ContainerFromIndex(i) as System.Windows.Controls.ListViewItem;
+                    if (container != null)
+                    {
+                        var textBlock = FindVisualChild<System.Windows.Controls.TextBlock>(container, "RemoveButtonText");
+                        if (textBlock != null)
+                        {
+                            textBlock.Text = text;
+                            System.Diagnostics.Debug.WriteLine($"Botón {i} actualizado a: {text}");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error en UpdateVisualRemoveButtons: {ex.Message}");
+            }
+        }
+
+        private T? FindVisualChild<T>(System.Windows.DependencyObject parent, string name) where T : System.Windows.DependencyObject
+        {
+            try
+            {
+                for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
+                {
+                    var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+                    
+                    if (child is T typedChild && (child as System.Windows.FrameworkElement)?.Name == name)
+                    {
+                        return typedChild;
+                    }
+                    
+                    var result = FindVisualChild<T>(child, name);
+                    if (result != null)
+                        return result;
+                }
+            }
+            catch
+            {
+                // Ignorar errores de búsqueda visual
+            }
+            
+            return null;
         }
 
         private void AddDll_Click(object sender, RoutedEventArgs e)
@@ -439,12 +534,19 @@ namespace GTAVInjector
                 LocalizationManager.SetLanguage(lang);
                 SettingsManager.Settings.Language = lang;
                 SettingsManager.SaveSettings();
+                
+                // Forzar actualización completa
                 UpdateUI();
+                
+                // Forzar actualización específica de botones Remove después de un pequeño delay
+                Dispatcher.BeginInvoke(new Action(() => {
+                    UpdateRemoveButtonsText();
+                }), System.Windows.Threading.DispatcherPriority.Loaded);
                 
                 // Actualizar texto de StatusText según idioma (verificar que no sea null)
                 if (StatusText != null)
                 {
-                    if (lang == "es")
+                    if (lang.ToLower() == "es")
                     {
                         if (StatusText.Text == "Ready" || StatusText.Text == "Listo")
                             StatusText.Text = "Listo";

@@ -6,6 +6,8 @@ namespace GTAVInjector.Core
     {
         private static string _currentLanguage = "es";
         
+        public static string CurrentLanguage => _currentLanguage;
+        
         private static readonly Dictionary<string, Dictionary<string, string>> Translations = new()
         {
             ["en"] = new Dictionary<string, string>

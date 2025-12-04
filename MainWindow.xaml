@@ -334,9 +334,13 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
-                                            <Button Grid.Column="3" x:Name="RemoveButton" Content="Remover" 
+                                            <Button Grid.Column="3" x:Name="RemoveButton"
                                                    Style="{StaticResource DangerButton}"
-                                                   Click="RemoveDll_Click" Tag="{Binding}"/>
+                                                   Click="RemoveDll_Click" Tag="{Binding}">
+                                                <Button.Content>
+                                                    <TextBlock x:Name="RemoveButtonText" Text="Quitar"/>
+                                                </Button.Content>
+                                            </Button>
                                         </Grid>
                                     </DataTemplate>
                                 </ListView.ItemTemplate>
