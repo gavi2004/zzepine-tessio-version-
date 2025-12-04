@@ -441,16 +441,19 @@ namespace GTAVInjector
                 SettingsManager.SaveSettings();
                 UpdateUI();
                 
-                // Actualizar texto de StatusText según idioma
-                if (lang == "es")
+                // Actualizar texto de StatusText según idioma (verificar que no sea null)
+                if (StatusText != null)
                 {
-                    if (StatusText.Text == "Ready" || StatusText.Text == "Listo")
-                        StatusText.Text = "Listo";
-                }
-                else
-                {
-                    if (StatusText.Text == "Listo" || StatusText.Text == "Ready")
-                        StatusText.Text = "Ready";
+                    if (lang == "es")
+                    {
+                        if (StatusText.Text == "Ready" || StatusText.Text == "Listo")
+                            StatusText.Text = "Listo";
+                    }
+                    else
+                    {
+                        if (StatusText.Text == "Listo" || StatusText.Text == "Ready")
+                            StatusText.Text = "Ready";
+                    }
                 }
             }
         }
