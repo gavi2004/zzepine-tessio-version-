@@ -224,6 +224,14 @@ namespace GTAVInjector
                         dll.Status = LocalizationManager.GetString("NotInjected");
                     }
                     
+                    // Resetear el texto de estado
+                    if (StatusText != null)
+                    {
+                        var currentLang = LocalizationManager.CurrentLanguage;
+                        StatusText.Text = currentLang.ToLower() == "es" ? "Listo" : "Ready";
+                        StatusText.Foreground = System.Windows.Media.Brushes.White;
+                    }
+                    
                     System.Diagnostics.Debug.WriteLine("Juego cerrado - Estado de auto-inyección reseteado");
                 }
             }
@@ -596,6 +604,17 @@ namespace GTAVInjector
             {
                 InjectionManager.KillGame();
                 StatusText.Text = LocalizationManager.GetString("GameKilled");
+                
+                // Después de un pequeño delay, resetear el texto de estado
+                Task.Delay(2000).ContinueWith(_ => 
+                {
+                    Dispatcher.Invoke(() => 
+                    {
+                        var currentLang = LocalizationManager.CurrentLanguage;
+                        StatusText.Text = currentLang.ToLower() == "es" ? "Listo" : "Ready";
+                        StatusText.Foreground = System.Windows.Media.Brushes.White;
+                    });
+                });
             }
             catch (Exception ex)
             {

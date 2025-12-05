@@ -46,7 +46,8 @@ namespace GTAVInjector.Core
                 ["VcRequirement"] = "• VC++ Redist x86 & x64",
                 ["GtaRequirement"] = "• GTA V installed",
                 ["AdminRequirement"] = "• Administrator rights",
-                ["Language"] = "Language"
+                ["Language"] = "Language",
+                ["GameKilled"] = "Game terminated"
             },
             ["es"] = new Dictionary<string, string>
             {
@@ -84,7 +85,8 @@ namespace GTAVInjector.Core
                 ["VcRequirement"] = "• VC++ Redistribuible x86 y x64",
                 ["GtaRequirement"] = "• GTA V instalado",
                 ["AdminRequirement"] = "• Permisos de administrador",
-                ["Language"] = "Idioma"
+                ["Language"] = "Idioma",
+                ["GameKilled"] = "Juego terminado"
             }
         };
 
