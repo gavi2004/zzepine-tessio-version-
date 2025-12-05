@@ -572,12 +572,6 @@ namespace GTAVInjector
                 }
                 
                 StatusText.Text = $"Inyección completada: ({injected}/{enabledDlls.Count})";
-                
-                if (injected == enabledDlls.Count)
-                {
-                    MessageBox.Show($"Inyección exitosa: ({injected}/{enabledDlls.Count})", 
-                        "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
             }
             catch (Exception ex)
             {
