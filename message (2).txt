@@ -64,7 +64,7 @@ namespace GTAVInjector
             };
         }
 
-        private async void VersionCheckTimer_Tick(object? sender, EventArgs e)
+        private async void VersionCheckTimer_Tick(object sender, EventArgs e)
         {
             await CheckVersionAsync();
         }
@@ -259,7 +259,7 @@ namespace GTAVInjector
             }
         }
 
-
+      
 
         private void UpdateGameStatus()
         {
@@ -424,6 +424,7 @@ namespace GTAVInjector
                 if (VersionStatusTitle != null) VersionStatusTitle.Text = LocalizationManager.GetString("VersionStatus");
                 if (UpdateButton != null) UpdateButton.Content = LocalizationManager.GetString("UpdateAvailable");
                 if (ChangelogButton != null) ChangelogButton.Content = LocalizationManager.GetString("ViewChangelog");
+               
                 
                 // Actualizar textos de requisitos
                 if (VcRequirementText != null) VcRequirementText.Text = LocalizationManager.GetString("VcRequirement");
@@ -846,132 +847,7 @@ namespace GTAVInjector
             }
         }
 
-        // ✨ NUEVO MÉTODO PARA VERIFICAR ACTUALIZACIONES MANUALMENTE ✨
-        private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                // Deshabilitar el botón mientras se verifica
-                if (CheckUpdatesButton != null)
-                {
-                    CheckUpdatesButton.IsEnabled = false;
-                    var checkingText = LocalizationManager.CurrentLanguage.ToLower() == "es" ? "🔄 Verificando..." : "🔄 Checking...";
-                    CheckUpdatesButton.Content = checkingText;
-                }
-
-                // Actualizar estado de la interfaz
-                var checkingStatusText = LocalizationManager.CurrentLanguage.ToLower() == "es" ? 
-                    "🌐 Verificando versión desde internet..." : 
-                    "🌐 Checking version from internet...";
-                VersionStatusText.Text = checkingStatusText;
-                VersionStatusText.Foreground = System.Windows.Media.Brushes.Yellow;
-
-                // Forzar verificación (ignorar cache)
-                bool isOutdated = await VersionChecker.ForceCheckForUpdatesAsync();
-                
-                // Obtener información detallada
-                var versionInfo = VersionChecker.GetVersionInfo();
-                
-                // Actualizar interfaz con resultado
-                UpdateVersionStatus(isOutdated);
-
-                // Mostrar mensaje informativo localizado
-                string message;
-                string title;
-                MessageBoxImage icon;
-
-                var isSpanish = LocalizationManager.CurrentLanguage.ToLower() == "es";
-
-                if (isOutdated)
-                {
-                    if (isSpanish)
-                    {
-                        message = $"🆕 ¡Nueva versión disponible!\n\n" +
-                                 $"📱 Versión actual: v{versionInfo.CurrentVersion}\n" +
-                                 $"🔥 Versión nueva: v{versionInfo.LatestVersion}\n\n" +
-                                 $"Se recomienda actualizar para obtener las últimas mejoras y correcciones.";
-                        title = "Actualización Disponible";
-                    }
-                    else
-                    {
-                        message = $"🆕 New version available!\n\n" +
-                                 $"📱 Current version: v{versionInfo.CurrentVersion}\n" +
-                                 $"🔥 Latest version: v{versionInfo.LatestVersion}\n\n" +
-                                 $"It's recommended to update to get the latest improvements and fixes.";
-                        title = "Update Available";
-                    }
-                    icon = MessageBoxImage.Information;
-                }
-                else if (!string.IsNullOrEmpty(versionInfo.LatestVersion))
-                {
-                    if (isSpanish)
-                    {
-                        message = $"✅ ¡Estás usando la versión más reciente!\n\n" +
-                                 $"📱 Versión actual: v{versionInfo.CurrentVersion}\n" +
-                                 $"🌐 Última versión: v{versionInfo.LatestVersion}\n\n" +
-                                 $"No se requiere actualización.";
-                        title = "Versión Actualizada";
-                    }
-                    else
-                    {
-                        message = $"✅ You're using the latest version!\n\n" +
-                                 $"📱 Current version: v{versionInfo.CurrentVersion}\n" +
-                                 $"🌐 Latest version: v{versionInfo.LatestVersion}\n\n" +
-                                 $"No update required.";
-                        title = "Up to Date";
-                    }
-                    icon = MessageBoxImage.Information;
-                }
-                else
-                {
-                    if (isSpanish)
-                    {
-                        message = "⚠️ No se pudo verificar la versión.\n\n" +
-                                 $"📱 Versión actual: v{versionInfo.CurrentVersion}\n\n" +
-                                 $"Verifica tu conexión a internet e intenta nuevamente.";
-                        title = "Error de Verificación";
-                    }
-                    else
-                    {
-                        message = "⚠️ Could not verify version.\n\n" +
-                                 $"📱 Current version: v{versionInfo.CurrentVersion}\n\n" +
-                                 $"Check your internet connection and try again.";
-                        title = "Verification Error";
-                    }
-                    icon = MessageBoxImage.Warning;
-                }
-
-                MessageBox.Show(message, title, MessageBoxButton.OK, icon);
-            }
-            catch (Exception ex)
-            {
-                // Error inesperado
-                var errorText = LocalizationManager.CurrentLanguage.ToLower() == "es" ? 
-                    "❌ Error al verificar versión" : 
-                    "❌ Error checking version";
-                VersionStatusText.Text = errorText;
-                VersionStatusText.Foreground = System.Windows.Media.Brushes.Red;
-
-                var isSpanish = LocalizationManager.CurrentLanguage.ToLower() == "es";
-                var errorMessage = isSpanish ? 
-                    $"❌ Error inesperado al verificar actualizaciones:\n\n{ex.Message}\n\nIntenta nuevamente más tarde." :
-                    $"❌ Unexpected error checking for updates:\n\n{ex.Message}\n\nPlease try again later.";
-                var errorTitle = isSpanish ? "Error de Verificación" : "Verification Error";
-
-                MessageBox.Show(errorMessage, errorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-
-                System.Diagnostics.Debug.WriteLine($"Error en CheckUpdates_Click: {ex}");
-            }
-            finally
-            {
-                // Rehabilitar el botón
-                if (CheckUpdatesButton != null)
-                {
-                    CheckUpdatesButton.IsEnabled = true;
-                    CheckUpdatesButton.Content = LocalizationManager.GetString("CheckUpdates");
-                }
-            }
-        }
+        
 
         private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
