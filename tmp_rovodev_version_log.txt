@@ -1,4 +1,0 @@
-[02:05:38] VersionChecker ejecutado - Versión actual: 1.0.7, Versión remota: 1.0.8, Desactualizada: True
-[02:05:48] VersionChecker ejecutado - Versión actual: 1.0.7, Versión remota: 1.0.8, Desactualizada: True
-[02:05:58] VersionChecker ejecutado - Versión actual: 1.0.7, Versión remota: 1.0.8, Desactualizada: True
-[02:06:08] VersionChecker ejecutado - Versión actual: 1.0.7, Versión remota: 1.0.8, Desactualizada: True

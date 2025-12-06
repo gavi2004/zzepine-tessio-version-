@@ -847,6 +847,11 @@
                                         <Button x:Name="ChangelogButton" Content="View Changelog" Width="120" Height="33"
                                                Style="{StaticResource PrimaryButton}" FontSize="10"
                                                Visibility="Collapsed" Click="Changelog_Click" Margin="0,5,0,0"/>
+                                        <!-- ✨ NUEVO BOTÓN VERIFICAR ACTUALIZACIONES ✨ -->
+                                        <Button x:Name="CheckUpdatesButton" Content="🔄 Verificar Actualizaciones" Width="160" Height="33"
+                                               Style="{StaticResource PrimaryButton}" FontSize="10"
+                                               Click="CheckUpdates_Click" Margin="0,5,0,0"
+                                               ToolTip="Verificar manualmente si hay nuevas versiones disponibles"/>
                                     </StackPanel>
                                 </Border>
                                 
