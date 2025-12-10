@@ -9,6 +9,9 @@
                 <ResourceDictionary Source="Styles/Buttons.xaml"/>
                 <ResourceDictionary Source="Styles/Controls.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <!-- 🎨 Color para textos estándar del launcher -->
+            <Color x:Key="LavenderColor">#D3B4FF</Color>
+            <SolidColorBrush x:Key="LavenderBrush" Color="{StaticResource LavenderColor}" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

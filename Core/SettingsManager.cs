@@ -258,7 +258,6 @@ namespace GTAVInjector.Core
             
             lines.Add("");
             lines.Add("[System]");
-            lines.Add($"Version={Settings.Version}");
             lines.Add($"LastModified={DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             
             return string.Join(Environment.NewLine, lines);
@@ -272,7 +271,6 @@ namespace GTAVInjector.Core
                 LauncherType = settings.LauncherType,
                 AutoInject = settings.AutoInject,
                 Language = settings.Language,
-                Version = settings.Version,
                 DllEntries = settings.DllEntries.Select(dll => new DllEntry
                 {
                     Path = dll.Path,
