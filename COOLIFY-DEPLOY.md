@@ -2,10 +2,10 @@
 
 ## 🔧 **Correcciones aplicadas para Coolify:**
 
-### ❌ **Problema original:**
-```
-Error: unable to start container process: error mounting "/data/coolify/applications/.../config.json" to rootfs at "/app/config.json": not a directory
-```
+### ❌ **Problemas originales:**
+1. **Montaje de volúmenes**: Error mounting config.json como directorio
+2. **Sintaxis Docker**: `COPY web-interface* ./web-interface/ || true` no válida en Docker
+3. **Archivos opcionales**: Uso de comodines problemático en COPY
 
 ### ✅ **Solución implementada:**
 
@@ -14,11 +14,12 @@ Error: unable to start container process: error mounting "/data/coolify/applicat
 - **Mantenido** solo configuración esencial
 - **Puerto**: 4569 expuesto correctamente
 
-#### 2. **Dockerfile mejorado:**
-- **Auto-genera** `config.json` por defecto si no existe
-- **Crea** interfaz web básica automáticamente
-- **Instala** dependencias automáticamente
-- **No depende** de archivos externos montados
+#### 2. **Dockerfile simplificado:**
+- **Eliminado** sintaxis `|| true` no válida
+- **Eliminado** comodines problemáticos en COPY
+- **Simplificado** a solo archivos necesarios: `version-server.js` y `config.json`
+- **Auto-genera** interfaz web básica
+- **Comando directo**: `CMD ["node", "version-server.js"]`
 
 #### 3. **.dockerignore optimizado:**
 - **Excluye** todo el código C# innecesario
