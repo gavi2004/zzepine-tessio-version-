@@ -1,0 +1,30 @@
+# Excluir archivos innecesarios del contexto Docker
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+.vs/
+.git/
+README.md
+*.md
+*.txt
+*.sln
+*.csproj*
+*.cs
+*.xaml*
+Properties/
+Models/
+Core/
+Styles/
+Resources/
+web-interface/app.js
+web-interface/styles.css
+web-interface/index.html
+start-server.bat
+test-client.js
+
+# Incluir solo los archivos necesarios para el servidor
+!version-server.js
+!config.json
+!package.json

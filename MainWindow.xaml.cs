@@ -27,7 +27,7 @@ namespace GTAVInjector
         private bool _isLoadingSettings = false; // Bandera para evitar guardado durante carga
 
         private readonly DispatcherTimer versionCheckTimer = new DispatcherTimer();
-        // private string currentLocalVersion = "1.0.8"; // Variable no utilizada - comentada para evitar warning
+        // private string currentLocalVersion = "1.0.7"; // Variable no utilizada - comentada para evitar warning
         private readonly DispatcherTimer _httpVersionTimer = new DispatcherTimer();
 
         public MainWindow()
@@ -74,7 +74,7 @@ namespace GTAVInjector
             };
         }
 
-        private async void VersionCheckTimer_Tick(object sender, EventArgs e)
+        private async void VersionCheckTimer_Tick(object? sender, EventArgs e)
         {
             await CheckVersionAsync();
         }
@@ -1232,7 +1232,7 @@ namespace GTAVInjector
                 var isSpanish = LocalizationManager.CurrentLanguage.ToLower() == "es";
 
                 // Usar información de la validación en lugar de versionInfo
-                string currentVersion = info.ClientVersion ?? "1.0.8";
+                string currentVersion = info.ClientVersion ?? "1.0.7";
                 string serverVersion = info.ServerVersion ?? (serverInfo?.version ?? "Unknown");
 
                 if (isOutdated)

@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4569;
 
 // Middleware para JSON y archivos estáticos
 app.use(express.json());
@@ -179,10 +179,10 @@ app.use('*', (req, res) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor de versiones iniciado en puerto ${PORT}`);
     console.log(`📋 Versión actual: ${currentVersion}`);
-    console.log(`🌐 Panel web disponible en: http://localhost:${PORT}`);
+    console.log(`🌐 Panel web disponible en: http://0.0.0.0:${PORT}`);
     console.log(`🔗 Endpoints API disponibles:`);
     console.log(`   GET  /api/version - Obtener versión actual`);
     console.log(`   POST /api/validate - Validar versión del inyector`);

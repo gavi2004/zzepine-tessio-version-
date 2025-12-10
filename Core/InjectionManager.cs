@@ -61,25 +61,27 @@ namespace GTAVInjector.Core
 
         public static bool IsGameRunning()
         {
-            // 🎯 DETECCIÓN MEJORADA DE MÚLTIPLES PROCESOS DE GTA
-            var possibleProcessNames = new[]
+            // 🎯 DETECCIÓN PRIORITARIA PARA PROCESOS ESPECÍFICOS
+            var priorityProcessNames = new[]
             {
-                "GTA5",           // GTA V Legacy
+                "GTA5_enhanced",  // GTA V Enhanced (PRIORIDAD)
+                "GTA5",           // GTA V Legacy (PRIORIDAD)
                 "GTAV",           // Variante del nombre
-                "GTA5_Enhanced",  // GTA V Enhanced
+                "GTA5_Enhanced",  // Variante con mayúscula
                 "GTAVLauncher",   // Launcher del juego
                 "GrandTheftAutoV" // Nombre completo
             };
 
-            // Buscar cualquier proceso que contenga estos nombres
-            foreach (var processName in possibleProcessNames)
+            // 🥇 BUSCAR PROCESOS PRIORITARIOS PRIMERO
+            foreach (var processName in priorityProcessNames)
             {
                 try
                 {
                     var processes = Process.GetProcessesByName(processName);
                     if (processes.Any())
                     {
-                        System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] ✅ Proceso encontrado: {processName}");
+                        var process = processes.First();
+                        System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] ✅ Proceso GTA encontrado: {processName}.exe (PID: {process.Id})");
                         return true;
                     }
                 }
@@ -211,17 +213,22 @@ namespace GTAVInjector.Core
 
         public static void KillGame()
         {
-            // 🎯 BUSCAR Y TERMINAR TODOS LOS PROCESOS DE GTA
-            var possibleProcessNames = new[]
+            // 🎯 BUSCAR Y TERMINAR PROCESOS DE GTA PRIORITARIOS
+            var priorityProcessNames = new[]
             {
-                "GTA5", "GTAV", "GTA5_Enhanced", "GTAVLauncher", "GrandTheftAutoV"
+                "GTA5_enhanced",  // GTA V Enhanced (PRIORIDAD)
+                "GTA5",           // GTA V Legacy (PRIORIDAD)
+                "GTAV",           // Variante del nombre
+                "GTA5_Enhanced",  // Variante con mayúscula
+                "GTAVLauncher",   // Launcher del juego
+                "GrandTheftAutoV" // Nombre completo
             };
 
             bool foundAnyProcess = false;
             var killedProcesses = new List<string>();
 
-            // Terminar procesos por nombre específico
-            foreach (var processName in possibleProcessNames)
+            // 🥇 TERMINAR PROCESOS PRIORITARIOS ESPECÍFICOS
+            foreach (var processName in priorityProcessNames)
             {
                 try
                 {
@@ -289,16 +296,21 @@ namespace GTAVInjector.Core
             if (!File.Exists(dllPath))
                 return InjectionResult.ERROR_DLL_NOTFOUND;
 
-            // 🎯 BUSCAR PROCESO DE GTA CON DETECCIÓN MEJORADA
+            // 🎯 BUSCAR PROCESO DE GTA CON DETECCIÓN PRIORITARIA
             Process? targetProcess = null;
             
-            // Primero: Buscar por nombres específicos
-            var possibleProcessNames = new[]
+            // 🥇 BUSCAR POR NOMBRES PRIORITARIOS ESPECÍFICOS
+            var priorityProcessNames = new[]
             {
-                "GTA5", "GTAV", "GTA5_Enhanced", "GTAVLauncher", "GrandTheftAutoV"
+                "GTA5_enhanced",  // GTA V Enhanced (PRIORIDAD)
+                "GTA5",           // GTA V Legacy (PRIORIDAD)
+                "GTAV",           // Variante del nombre
+                "GTA5_Enhanced",  // Variante con mayúscula
+                "GTAVLauncher",   // Launcher del juego
+                "GrandTheftAutoV" // Nombre completo
             };
 
-            foreach (var processName in possibleProcessNames)
+            foreach (var processName in priorityProcessNames)
             {
                 try
                 {
@@ -306,7 +318,7 @@ namespace GTAVInjector.Core
                     if (processes.Any())
                     {
                         targetProcess = processes.First();
-                        System.Diagnostics.Debug.WriteLine($"[INYECCIÓN] 🎯 Proceso objetivo: {processName} (PID: {targetProcess.Id})");
+                        System.Diagnostics.Debug.WriteLine($"[INYECCIÓN] 🎯 Proceso objetivo encontrado: {processName}.exe (PID: {targetProcess.Id})");
                         break;
                     }
                 }

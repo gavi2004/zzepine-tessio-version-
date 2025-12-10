@@ -11,8 +11,8 @@ namespace GTAVInjector
 {
     public class VersionValidator
     {
-        private readonly string serverBaseUrl = "http://localhost:3000/api";
-        private readonly string currentVersion = "1.0.8"; // ← TU VERSIÓN ACTUAL DEL INYECTOR
+        private readonly string serverBaseUrl = "https://version-check.bitforges.com/api";
+        private readonly string currentVersion = "1.0.7"; // ← TU VERSIÓN ACTUAL DEL INYECTOR
         private bool _hasShownOutdatedError = false; // ← Para mostrar el error solo una vez
         
         // URLs de los endpoints
@@ -214,7 +214,7 @@ namespace GTAVInjector
                 }
                 
                 var jsonContent = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<ValidationResult>(jsonContent);
+                return JsonConvert.DeserializeObject<ValidationResult>(jsonContent) ?? new ValidationResult();
             }
             catch (Exception ex)
             {
@@ -325,7 +325,7 @@ namespace GTAVInjector
         private void ShowConnectionError()
         {
             var message = "❌ NO SE PUDO CONECTAR AL SERVIDOR DE VERSIONES\n\n" +
-                         "💡 Asegúrate de que 'node version-server.js' esté ejecutándose.";
+                         "💡 Verifica tu conexión a internet o contacta al administrador.";
             
             System.Diagnostics.Debug.WriteLine(message.Replace("\n", " "));
         }
