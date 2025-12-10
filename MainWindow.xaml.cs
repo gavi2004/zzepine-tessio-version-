@@ -34,22 +34,8 @@ namespace GTAVInjector
         {
             InitializeComponent();
 
-            // Timer cada 10 segundos para validación HTTP
-            _httpVersionTimer.Interval = TimeSpan.FromSeconds(30);
-            _httpVersionTimer.Tick += HttpVersionTimer_Tick;
-            _httpVersionTimer.Start();
-
-            // 🚀 SISTEMA HTTP DE VALIDACIÓN INTEGRADO
-            CheckForHttpUpdates();
-            StartHttpVersionMonitoring();
-
-            // Timer para verificación legacy (mantener como fallback)
-            versionCheckTimer.Interval = TimeSpan.FromSeconds(10);
-            versionCheckTimer.Tick += VersionCheckTimer_Tick;
-            versionCheckTimer.Start();
-
-            // Revisión al iniciar también
-            _ = CheckVersionAsync();
+            // ✅ VALIDACIÓN INICIAL ÚNICA (sin timers repetitivos)
+            _ = PerformInitialVersionCheckAsync();
 
 
 
@@ -74,110 +60,23 @@ namespace GTAVInjector
             };
         }
 
-        private async void VersionCheckTimer_Tick(object? sender, EventArgs e)
+        /// <summary>
+        /// 🚀 VALIDACIÓN INICIAL ÚNICA - Se ejecuta solo al iniciar
+        /// </summary>
+        private async Task PerformInitialVersionCheckAsync()
         {
-            await CheckVersionAsync();
-        }
-
-        private async Task CheckVersionAsync()
-        {
-            // 🟣 Mostrar mensaje mientras se consulta
+            // Mostrar estado de carga inicial
             Dispatcher.Invoke(() =>
             {
-                VersionStatusText.Text = "COMPROBANDO VERSIÓN...";
-                VersionStatusText.Foreground = (Brush)Application.Current.Resources["LavenderBrush"]; // ← COLOR FIJO PARA ESTADO DE CARGA
+                VersionStatusText.Text = "🔄 Validando versión...";
+                VersionStatusText.Foreground = System.Windows.Media.Brushes.Orange;
+                
+                // Mantener funcionalidad básica habilitada
+                LaunchButton.IsEnabled = true;
+                InjectButton.IsEnabled = true;
+                KillButton.IsEnabled = true;
             });
 
-            // 🕒 2. Esperar 3 segundos (NO bloquea UI)
-            await Task.Delay(3000);
-
-            try
-            {
-                // ========================================
-                // SISTEMA GITHUB DESHABILITADO 
-                // Ahora usa solo validación HTTP local
-                // ========================================
-                
-                /* SISTEMA GITHUB COMENTADO:
-                using (HttpClient client = new HttpClient())
-                {
-                    string remoteVersion = await client.GetStringAsync("https://raw.githubusercontent.com/Tessio/Translations/refs/heads/master/version_l.txt");
-                    remoteVersion = remoteVersion.Trim();
-                */
-                
-                // 🚀 FORZAR USO DEL SISTEMA HTTP LOCAL
-                await CheckHttpVersionAsync();
-                return; // Salir aquí para evitar el resto del código GitHub
-                
-                /* RESTO DEL CÓDIGO GITHUB COMENTADO:
-                using (HttpClient client = new HttpClient())
-                {
-                    string remoteVersion = "dummy"; // Placeholder para mantener compilación
-
-                    // Si la versión cambió → actualiza UI
-                    if (remoteVersion != currentLocalVersion)
-                    {
-                        Dispatcher.Invoke(() =>
-                        {
-                            VersionStatusText.Text = $"NUEVA VERSIÓN DISPONIBLE: {currentLocalVersion} > {remoteVersion}";
-                            VersionStatusText.Foreground = System.Windows.Media.Brushes.Red;
-
-                            // 🔥 Mostrar botón de actualizar
-                            UpdateButton.Visibility = Visibility.Visible;
-                            UpdateButton.Content = "Actualizar Ahora";
-                            UpdateButton.IsEnabled = true;
-
-                            // Ocultar changelog
-                            ChangelogButton.Visibility = Visibility.Collapsed;
-
-                            // Bloquear funciones
-                            LaunchButton.IsEnabled = false;
-                            InjectButton.IsEnabled = false;
-                            KillButton.IsEnabled = false;
-                        });
-                    }
-                    else
-                    {
-                        Dispatcher.Invoke(() =>
-                        {
-                            VersionStatusText.Text = $"ULTIMA VERSIÓN: {currentLocalVersion}";
-                            VersionStatusText.Foreground = System.Windows.Media.Brushes.LightGreen;
-
-                            UpdateButton.Visibility = Visibility.Collapsed;
-
-                            InjectButton.IsEnabled = true;
-                            KillButton.IsEnabled = true;
-                            if (!InjectionManager.IsGameRunning())
-                            {
-                                LaunchButton.IsEnabled = true;
-
-                            }
-
-                            // ✅ MOSTRAR EL BOTÓN DE CHANGELOG CUANDO ESTÁ ACTUALIZADO
-                            ChangelogButton.Visibility = Visibility.Visible;  // ← AQUÍ ESTABA FALTANDO
-                        });
-                    }
-                }
-                */
-            }
-            catch
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    VersionStatusText.Text = "ERROR AL COMPROBAR VERSIÓN";
-                });
-            }
-        }
-
-        // 🚀 NUEVOS MÉTODOS DEL SISTEMA HTTP DE VALIDACIÓN
-        
-        private async void HttpVersionTimer_Tick(object? sender, EventArgs e)
-        {
-            await CheckHttpVersionAsync();
-        }
-
-        private async void CheckForHttpUpdates()
-        {
             try
             {
                 var validator = new VersionValidator();
@@ -188,28 +87,23 @@ namespace GTAVInjector
                     HandleVersionValidationResult(info);
                 });
                 
-                System.Diagnostics.Debug.WriteLine($"🔍 Validación HTTP: {info.ErrorType} - {info.Message}");
+                System.Diagnostics.Debug.WriteLine($"✅ Validación inicial completada: {info.ErrorType} - {info.Message}");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"❌ Error en CheckForHttpUpdates: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"⚠️ Validación inicial falló: {ex.Message}");
                 
                 Dispatcher.Invoke(() =>
                 {
-                    // 🔌 MODO OFFLINE: Permitir funcionamiento local
-                    VersionStatusText.Text = "🔌 Servidor offline - modo local activo";
+                    // 🚀 MODO OFFLINE: Permitir funcionamiento completo
+                    VersionStatusText.Text = "🔌 Modo offline - funcionamiento local";
                     VersionStatusText.Foreground = System.Windows.Media.Brushes.Yellow;
-                    
-                    // 🚀 FUNCIONALIDAD COMPLETA EN MODO OFFLINE
-                    LaunchButton.IsEnabled = true;
-                    InjectButton.IsEnabled = InjectionManager.IsGameRunning();
-                    KillButton.IsEnabled = InjectionManager.IsGameRunning();
-                    
-                    UpdateButton.Visibility = Visibility.Collapsed;
-                    ChangelogButton.Visibility = Visibility.Visible;
+                    EnableFullFunctionality();
                 });
             }
         }
+
+        // 🚀 SISTEMA DE VALIDACIÓN SIMPLIFICADO
 
         /// <summary>
         /// 🎯 MANEJO INTELIGENTE DE DIFERENTES ESCENARIOS DE VERSIONES
@@ -351,91 +245,6 @@ namespace GTAVInjector
             }
         }
 
-        private async Task CheckHttpVersionAsync()
-        {
-            try
-            {
-                var validator = new VersionValidator();
-                var info = await validator.ValidateVersionSilentAsync();
-                
-                // Solo actualizar UI si hay cambios significativos
-                if (!info.IsValid && info.ErrorType == ValidationErrorType.VersionMismatch)
-                {
-                    Dispatcher.Invoke(() =>
-                    {
-                        if (info.IsClientOutdated)
-                        {
-                            VersionStatusText.Text = $"❌ DESACTUALIZADO v{info.ClientVersion} → v{info.ServerVersion}";
-                            VersionStatusText.Foreground = System.Windows.Media.Brushes.Red;
-                            
-                            // Deshabilitar funciones críticas
-                            LaunchButton.IsEnabled = false;
-                            InjectButton.IsEnabled = false;
-                            KillButton.IsEnabled = false;
-                        }
-                    });
-                }
-            }
-            catch
-            {
-                // Error silencioso - no interrumpir flujo normal
-            }
-        }
-
-        private void StartHttpVersionMonitoring()
-        {
-            Task.Run(async () =>
-            {
-                while (true)
-                {
-                    try
-                    {
-                        await Task.Delay(TimeSpan.FromMinutes(5)); // Verificar cada 5 minutos
-                        
-                        var validator = new VersionValidator();
-                        var result = await validator.ValidateVersionSilentAsync();
-                        
-                        if (!result.IsValid && result.ErrorType == ValidationErrorType.VersionMismatch && result.IsClientOutdated)
-                        {
-                            Dispatcher.Invoke(() =>
-                            {
-                                // Mostrar notificación de versión desactualizada
-                                var isSpanish = LocalizationManager.CurrentLanguage.ToLower() == "es";
-                                var message = isSpanish ? 
-                                    $"🔔 Nueva versión disponible: v{result.ServerVersion}\n¿Deseas ir al Discord para actualizar?" :
-                                    $"🔔 New version available: v{result.ServerVersion}\nWould you like to go to Discord to update?";
-                                var title = isSpanish ? "Nueva Versión Detectada" : "New Version Detected";
-                                
-                                var dialogResult = MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Information);
-                                
-                                if (dialogResult == MessageBoxResult.Yes)
-                                {
-                                    try
-                                    {
-                                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                                        {
-                                            FileName = "https://discord.gg/NH6pArJB",
-                                            UseShellExecute = true
-                                        });
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        System.Diagnostics.Debug.WriteLine($"Error abriendo Discord: {ex.Message}");
-                                    }
-                                }
-                            });
-                            
-                            break; // Solo mostrar una vez por sesión
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Error en monitoreo HTTP: {ex.Message}");
-                        await Task.Delay(TimeSpan.FromMinutes(1)); // Reintentar en 1 minuto si hay error
-                    }
-                }
-            });
-        }
 
         private void LoadSettings()
         {
@@ -520,14 +329,17 @@ namespace GTAVInjector
         {
             bool isRunning = InjectionManager.IsGameRunning();
 
-
             if (isRunning)
             {
                 GameStatusText.Text = LocalizationManager.GetString("GameRunning");
                 GameStatusText.Foreground = System.Windows.Media.Brushes.LimeGreen;
 
-                // Solo habilitar botones si no está desactualizado
-                LaunchButton.IsEnabled = false;
+                // ✅ MANTENER BOTÓN DE LANZAR HABILITADO (el usuario puede querer lanzar otra instancia)
+                // LaunchButton.IsEnabled = false; // ← REMOVIDO
+                
+                // Habilitar botones de juego activo
+                InjectButton.IsEnabled = true;
+                KillButton.IsEnabled = true;
 
 
                 // Si el juego no estaba corriendo antes y ahora sí, resetear auto-inject
@@ -541,10 +353,13 @@ namespace GTAVInjector
             }
             else
             {
-                KillButton.IsEnabled = false;
-
                 GameStatusText.Text = LocalizationManager.GetString("GameNotRunning");
                 GameStatusText.Foreground = System.Windows.Media.Brushes.Red;
+                
+                // ✅ MANTENER FUNCIONALIDAD HABILITADA CUANDO NO HAY JUEGO
+                LaunchButton.IsEnabled = true;
+                InjectButton.IsEnabled = false; // Solo deshabilitar inyección si no hay juego
+                KillButton.IsEnabled = false;
 
                 // Si el juego estaba ejecutándose antes y ahora no, resetear el estado
                 if (_gameWasRunning)
