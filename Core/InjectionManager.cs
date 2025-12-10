@@ -60,11 +60,75 @@ namespace GTAVInjector.Core
 
         public static bool IsGameRunning()
         {
-            var processName = SettingsManager.Settings.GameType == GameType.Legacy 
-                ? "GTA5" 
-                : "GTA5_Enhanced";
-            
-            return Process.GetProcessesByName(processName).Any();
+            // 🎯 DETECCIÓN MEJORADA DE MÚLTIPLES PROCESOS DE GTA
+            var possibleProcessNames = new[]
+            {
+                "GTA5",           // GTA V Legacy
+                "GTAV",           // Variante del nombre
+                "GTA5_Enhanced",  // GTA V Enhanced
+                "GTAVLauncher",   // Launcher del juego
+                "GrandTheftAutoV" // Nombre completo
+            };
+
+            // Buscar cualquier proceso que contenga estos nombres
+            foreach (var processName in possibleProcessNames)
+            {
+                try
+                {
+                    var processes = Process.GetProcessesByName(processName);
+                    if (processes.Any())
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] ✅ Proceso encontrado: {processName}");
+                        return true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] Error buscando {processName}: {ex.Message}");
+                }
+            }
+
+            // 🔍 BÚSQUEDA AVANZADA POR DESCRIPCIÓN/TÍTULO DE VENTANA
+            try
+            {
+                var allProcesses = Process.GetProcesses();
+                foreach (var process in allProcesses)
+                {
+                    try
+                    {
+                        // Verificar por nombre del proceso (sin .exe)
+                        string processNameLower = process.ProcessName.ToLower();
+                        if (processNameLower.Contains("gta") && 
+                            (processNameLower.Contains("5") || processNameLower.Contains("v")))
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] ✅ GTA encontrado por patrón: {process.ProcessName}");
+                            return true;
+                        }
+
+                        // Verificar por título de ventana (si tiene ventana principal)
+                        if (!string.IsNullOrEmpty(process.MainWindowTitle))
+                        {
+                            string windowTitle = process.MainWindowTitle.ToLower();
+                            if (windowTitle.Contains("grand theft auto") || 
+                                (windowTitle.Contains("gta") && windowTitle.Contains("v")))
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] ✅ GTA encontrado por ventana: {process.MainWindowTitle}");
+                                return true;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Ignorar errores de acceso a procesos específicos
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] Error en búsqueda avanzada: {ex.Message}");
+            }
+
+            return false;
         }
 
         public static void LaunchGame()
@@ -146,27 +210,76 @@ namespace GTAVInjector.Core
 
         public static void KillGame()
         {
-            var processName = SettingsManager.Settings.GameType == GameType.Legacy 
-                ? "GTA5" 
-                : "GTA5_Enhanced";
-            
-            var processes = Process.GetProcessesByName(processName);
-            
-            if (!processes.Any())
-                throw new Exception("Game is not running");
+            // 🎯 BUSCAR Y TERMINAR TODOS LOS PROCESOS DE GTA
+            var possibleProcessNames = new[]
+            {
+                "GTA5", "GTAV", "GTA5_Enhanced", "GTAVLauncher", "GrandTheftAutoV"
+            };
 
-            foreach (var process in processes)
+            bool foundAnyProcess = false;
+            var killedProcesses = new List<string>();
+
+            // Terminar procesos por nombre específico
+            foreach (var processName in possibleProcessNames)
             {
                 try
                 {
-                    process.Kill();
-                    process.WaitForExit(5000);
+                    var processes = Process.GetProcessesByName(processName);
+                    foreach (var process in processes)
+                    {
+                        try
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[TERMINAR] 🔪 Terminando proceso: {processName} (PID: {process.Id})");
+                            process.Kill();
+                            process.WaitForExit(3000);
+                            killedProcesses.Add($"{processName} (PID: {process.Id})");
+                            foundAnyProcess = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[TERMINAR] Error terminando {processName}: {ex.Message}");
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception($"Failed to kill game process: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[TERMINAR] Error buscando {processName}: {ex.Message}");
                 }
             }
+
+            // Búsqueda avanzada para procesos de GTA no detectados
+            try
+            {
+                var allProcesses = Process.GetProcesses();
+                foreach (var process in allProcesses)
+                {
+                    try
+                    {
+                        string processNameLower = process.ProcessName.ToLower();
+                        if (processNameLower.Contains("gta") && 
+                            (processNameLower.Contains("5") || processNameLower.Contains("v")))
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[TERMINAR] 🔪 Terminando proceso encontrado por patrón: {process.ProcessName} (PID: {process.Id})");
+                            process.Kill();
+                            process.WaitForExit(3000);
+                            killedProcesses.Add($"{process.ProcessName} (PID: {process.Id})");
+                            foundAnyProcess = true;
+                        }
+                    }
+                    catch { /* Ignorar errores */ }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[TERMINAR] Error en búsqueda avanzada: {ex.Message}");
+            }
+
+            if (!foundAnyProcess)
+            {
+                throw new Exception("No se encontró ningún proceso de GTA ejecutándose");
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[TERMINAR] ✅ Procesos terminados: {string.Join(", ", killedProcesses)}");
         }
 
         public static InjectionResult InjectDll(string dllPath)
@@ -175,17 +288,69 @@ namespace GTAVInjector.Core
             if (!File.Exists(dllPath))
                 return InjectionResult.ERROR_DLL_NOTFOUND;
 
-            var processName = SettingsManager.Settings.GameType == GameType.Legacy 
-                ? "GTA5" 
-                : "GTA5_Enhanced";
+            // 🎯 BUSCAR PROCESO DE GTA CON DETECCIÓN MEJORADA
+            Process? targetProcess = null;
             
-            var processes = Process.GetProcessesByName(processName);
-            
-            // Verificar si el juego está ejecutándose
-            if (!processes.Any())
-                return InjectionResult.ERROR_OPEN_PROCESS;
+            // Primero: Buscar por nombres específicos
+            var possibleProcessNames = new[]
+            {
+                "GTA5", "GTAV", "GTA5_Enhanced", "GTAVLauncher", "GrandTheftAutoV"
+            };
 
-            var process = processes.First();
+            foreach (var processName in possibleProcessNames)
+            {
+                try
+                {
+                    var processes = Process.GetProcessesByName(processName);
+                    if (processes.Any())
+                    {
+                        targetProcess = processes.First();
+                        System.Diagnostics.Debug.WriteLine($"[INYECCIÓN] 🎯 Proceso objetivo: {processName} (PID: {targetProcess.Id})");
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[INYECCIÓN] Error buscando {processName}: {ex.Message}");
+                }
+            }
+
+            // Segundo: Búsqueda avanzada si no se encontró
+            if (targetProcess == null)
+            {
+                try
+                {
+                    var allProcesses = Process.GetProcesses();
+                    foreach (var process in allProcesses)
+                    {
+                        try
+                        {
+                            string processNameLower = process.ProcessName.ToLower();
+                            if (processNameLower.Contains("gta") && 
+                                (processNameLower.Contains("5") || processNameLower.Contains("v")))
+                            {
+                                targetProcess = process;
+                                System.Diagnostics.Debug.WriteLine($"[INYECCIÓN] 🎯 Proceso encontrado por patrón: {process.ProcessName} (PID: {process.Id})");
+                                break;
+                            }
+                        }
+                        catch { /* Ignorar errores */ }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[INYECCIÓN] Error en búsqueda avanzada: {ex.Message}");
+                }
+            }
+            
+            // Verificar si se encontró un proceso
+            if (targetProcess == null)
+            {
+                System.Diagnostics.Debug.WriteLine("[INYECCIÓN] ❌ No se encontró ningún proceso de GTA ejecutándose");
+                return InjectionResult.ERROR_OPEN_PROCESS;
+            }
+
+            var process = targetProcess;
             
             try
             {

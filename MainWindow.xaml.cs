@@ -25,13 +25,23 @@ namespace GTAVInjector
         private bool _isLoadingSettings = false; // Bandera para evitar guardado durante carga
 
         private readonly DispatcherTimer versionCheckTimer = new DispatcherTimer();
-        private string currentLocalVersion = "1.0.7"; // Aquí tu versión
+        // private string currentLocalVersion = "1.0.8"; // Variable no utilizada - comentada para evitar warning
+        private readonly DispatcherTimer _httpVersionTimer = new DispatcherTimer();
 
         public MainWindow()
         {
             InitializeComponent();
 
-            // Timer cada 10 segundos
+            // Timer cada 10 segundos para validación HTTP
+            _httpVersionTimer.Interval = TimeSpan.FromSeconds(30);
+            _httpVersionTimer.Tick += HttpVersionTimer_Tick;
+            _httpVersionTimer.Start();
+
+            // 🚀 SISTEMA HTTP DE VALIDACIÓN INTEGRADO
+            CheckForHttpUpdates();
+            StartHttpVersionMonitoring();
+
+            // Timer para verificación legacy (mantener como fallback)
             versionCheckTimer.Interval = TimeSpan.FromSeconds(10);
             versionCheckTimer.Tick += VersionCheckTimer_Tick;
             versionCheckTimer.Start();
@@ -82,10 +92,26 @@ namespace GTAVInjector
 
             try
             {
+                // ========================================
+                // SISTEMA GITHUB DESHABILITADO 
+                // Ahora usa solo validación HTTP local
+                // ========================================
+                
+                /* SISTEMA GITHUB COMENTADO:
                 using (HttpClient client = new HttpClient())
                 {
                     string remoteVersion = await client.GetStringAsync("https://raw.githubusercontent.com/Tessio/Translations/refs/heads/master/version_l.txt");
                     remoteVersion = remoteVersion.Trim();
+                */
+                
+                // 🚀 FORZAR USO DEL SISTEMA HTTP LOCAL
+                await CheckHttpVersionAsync();
+                return; // Salir aquí para evitar el resto del código GitHub
+                
+                /* RESTO DEL CÓDIGO GITHUB COMENTADO:
+                using (HttpClient client = new HttpClient())
+                {
+                    string remoteVersion = "dummy"; // Placeholder para mantener compilación
 
                     // Si la versión cambió → actualiza UI
                     if (remoteVersion != currentLocalVersion)
@@ -119,6 +145,7 @@ namespace GTAVInjector
                         });
                     }
                 }
+                */
             }
             catch
             {
@@ -127,6 +154,274 @@ namespace GTAVInjector
                     VersionStatusText.Text = "Error comprobando versión";
                 });
             }
+        }
+
+        // 🚀 NUEVOS MÉTODOS DEL SISTEMA HTTP DE VALIDACIÓN
+        
+        private async void HttpVersionTimer_Tick(object? sender, EventArgs e)
+        {
+            await CheckHttpVersionAsync();
+        }
+
+        private async void CheckForHttpUpdates()
+        {
+            try
+            {
+                var validator = new VersionValidator();
+                var info = await validator.ValidateVersionSilentAsync();
+                
+                Dispatcher.Invoke(() =>
+                {
+                    HandleVersionValidationResult(info);
+                });
+                
+                System.Diagnostics.Debug.WriteLine($"🔍 Validación HTTP: {info.ErrorType} - {info.Message}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ Error en CheckForHttpUpdates: {ex.Message}");
+                
+                Dispatcher.Invoke(() =>
+                {
+                    // 🔌 MODO OFFLINE: Permitir funcionamiento local
+                    VersionStatusText.Text = "🔌 Servidor offline - modo local activo";
+                    VersionStatusText.Foreground = System.Windows.Media.Brushes.Yellow;
+                    
+                    // 🚀 FUNCIONALIDAD COMPLETA EN MODO OFFLINE
+                    LaunchButton.IsEnabled = true;
+                    InjectButton.IsEnabled = InjectionManager.IsGameRunning();
+                    KillButton.IsEnabled = InjectionManager.IsGameRunning();
+                    
+                    UpdateButton.Visibility = Visibility.Collapsed;
+                    ChangelogButton.Visibility = Visibility.Visible;
+                });
+            }
+        }
+
+        /// <summary>
+        /// 🎯 MANEJO INTELIGENTE DE DIFERENTES ESCENARIOS DE VERSIONES
+        /// </summary>
+        private void HandleVersionValidationResult(VersionValidationInfo info)
+        {
+            switch (info.ErrorType)
+            {
+                case ValidationErrorType.None:
+                    // ✅ VERSIONES IGUALES: Todo perfecto
+                    VersionStatusText.Text = $"✅ Versión válida v{info.ClientVersion}";
+                    VersionStatusText.Foreground = System.Windows.Media.Brushes.LimeGreen;
+                    EnableFullFunctionality();
+                    break;
+
+                case ValidationErrorType.VersionMismatch:
+                    if (info.IsClientOutdated)
+                    {
+                        // ❌ CLIENTE DESACTUALIZADO: Funcionalidad limitada
+                        var versionGap = CalculateVersionGap(info.ClientVersion, info.ServerVersion);
+                        
+                        if (versionGap <= 2) // Diferencia menor: Permitir con advertencia
+                        {
+                            VersionStatusText.Text = $"⚠️ DESACTUALIZADO (menor) v{info.ClientVersion} → v{info.ServerVersion}";
+                            VersionStatusText.Foreground = System.Windows.Media.Brushes.Orange;
+                            
+                            // 🚀 PERMITIR FUNCIONAMIENTO CON ADVERTENCIA
+                            EnableFullFunctionality();
+                            ShowUpdateNotification(info.ServerVersion, false); // No crítico
+                        }
+                        else // Diferencia mayor: Bloquear funciones críticas
+                        {
+                            VersionStatusText.Text = $"❌ DESACTUALIZADO (crítico) v{info.ClientVersion} → v{info.ServerVersion}";
+                            VersionStatusText.Foreground = System.Windows.Media.Brushes.Red;
+                            
+                            // 🚫 BLOQUEAR FUNCIONES CRÍTICAS
+                            LaunchButton.IsEnabled = false;
+                            InjectButton.IsEnabled = false;
+                            KillButton.IsEnabled = false;
+                            
+                            ShowUpdateNotification(info.ServerVersion, true); // Crítico
+                        }
+                    }
+                    else if (info.IsClientNewer)
+                    {
+                        // 🆕 CLIENTE MÁS NUEVO: Permitir funcionamiento (usuario avanzado)
+                        VersionStatusText.Text = $"🚀 Cliente avanzado v{info.ClientVersion} > v{info.ServerVersion}";
+                        VersionStatusText.Foreground = System.Windows.Media.Brushes.Cyan;
+                        EnableFullFunctionality();
+                    }
+                    else
+                    {
+                        // ⚠️ VERSIONES DIFERENTES PERO MISMA NUMERACIÓN
+                        VersionStatusText.Text = $"⚠️ Versión diferente detectada - verificar manualmente";
+                        VersionStatusText.Foreground = System.Windows.Media.Brushes.Yellow;
+                        EnableFullFunctionality();
+                    }
+                    break;
+
+                case ValidationErrorType.ConnectionError:
+                case ValidationErrorType.Timeout:
+                    // 🔌 SERVIDOR NO DISPONIBLE: Modo offline completo
+                    VersionStatusText.Text = $"🔌 Modo offline v{info.ClientVersion} - servidor no disponible";
+                    VersionStatusText.Foreground = System.Windows.Media.Brushes.Yellow;
+                    EnableFullFunctionality();
+                    break;
+
+                case ValidationErrorType.ServerError:
+                    // 🔧 ERROR DEL SERVIDOR: Permitir funcionamiento local
+                    VersionStatusText.Text = $"🔧 Error del servidor - usando validación local v{info.ClientVersion}";
+                    VersionStatusText.Foreground = System.Windows.Media.Brushes.Orange;
+                    EnableFullFunctionality();
+                    break;
+
+                default:
+                    // ❓ ERROR DESCONOCIDO: Modo conservador
+                    VersionStatusText.Text = $"❓ Estado incierto v{info.ClientVersion} - verificar conexión";
+                    VersionStatusText.Foreground = System.Windows.Media.Brushes.Gray;
+                    EnableFullFunctionality(); // Permitir funcionamiento por defecto
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 🚀 HABILITAR FUNCIONALIDAD COMPLETA
+        /// </summary>
+        private void EnableFullFunctionality()
+        {
+            LaunchButton.IsEnabled = true;
+            InjectButton.IsEnabled = InjectionManager.IsGameRunning();
+            KillButton.IsEnabled = InjectionManager.IsGameRunning();
+            
+            UpdateButton.Visibility = Visibility.Collapsed;
+            ChangelogButton.Visibility = Visibility.Visible;
+        }
+
+        /// <summary>
+        /// 📊 CALCULAR DIFERENCIA ENTRE VERSIONES (para determinar criticidad)
+        /// </summary>
+        private int CalculateVersionGap(string clientVersion, string serverVersion)
+        {
+            try
+            {
+                var clientParts = clientVersion.Split('.').Select(int.Parse).ToArray();
+                var serverParts = serverVersion.Split('.').Select(int.Parse).ToArray();
+                
+                // Calcular diferencia en versión principal
+                int majorDiff = Math.Abs((serverParts.ElementAtOrDefault(0)) - (clientParts.ElementAtOrDefault(0)));
+                int minorDiff = Math.Abs((serverParts.ElementAtOrDefault(1)) - (clientParts.ElementAtOrDefault(1)));
+                int patchDiff = Math.Abs((serverParts.ElementAtOrDefault(2)) - (clientParts.ElementAtOrDefault(2)));
+                
+                // Devolver la diferencia más significativa
+                if (majorDiff > 0) return majorDiff * 100; // Diferencia mayor es crítica
+                if (minorDiff > 0) return minorDiff * 10;  // Diferencia menor es importante
+                return patchDiff; // Diferencia de patch es menor
+            }
+            catch
+            {
+                return 0; // Si hay error, asumir compatibilidad
+            }
+        }
+
+        /// <summary>
+        /// 🔔 MOSTRAR NOTIFICACIÓN DE ACTUALIZACIÓN
+        /// </summary>
+        private void ShowUpdateNotification(string newVersion, bool isCritical)
+        {
+            if (isCritical)
+            {
+                UpdateButton.Visibility = Visibility.Visible;
+                UpdateButton.Content = $"🚨 ACTUALIZAR A v{newVersion}";
+                ChangelogButton.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                UpdateButton.Visibility = Visibility.Visible;
+                UpdateButton.Content = $"⬆️ Actualizar a v{newVersion}";
+                ChangelogButton.Visibility = Visibility.Visible; // Mantener ambos visibles
+            }
+        }
+
+        private async Task CheckHttpVersionAsync()
+        {
+            try
+            {
+                var validator = new VersionValidator();
+                var info = await validator.ValidateVersionSilentAsync();
+                
+                // Solo actualizar UI si hay cambios significativos
+                if (!info.IsValid && info.ErrorType == ValidationErrorType.VersionMismatch)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        if (info.IsClientOutdated)
+                        {
+                            VersionStatusText.Text = $"❌ DESACTUALIZADO v{info.ClientVersion} → v{info.ServerVersion}";
+                            VersionStatusText.Foreground = System.Windows.Media.Brushes.Red;
+                            
+                            // Deshabilitar funciones críticas
+                            LaunchButton.IsEnabled = false;
+                            InjectButton.IsEnabled = false;
+                            KillButton.IsEnabled = false;
+                        }
+                    });
+                }
+            }
+            catch
+            {
+                // Error silencioso - no interrumpir flujo normal
+            }
+        }
+
+        private void StartHttpVersionMonitoring()
+        {
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromMinutes(5)); // Verificar cada 5 minutos
+                        
+                        var validator = new VersionValidator();
+                        var result = await validator.ValidateVersionSilentAsync();
+                        
+                        if (!result.IsValid && result.ErrorType == ValidationErrorType.VersionMismatch && result.IsClientOutdated)
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                // Mostrar notificación de versión desactualizada
+                                var isSpanish = LocalizationManager.CurrentLanguage.ToLower() == "es";
+                                var message = isSpanish ? 
+                                    $"🔔 Nueva versión disponible: v{result.ServerVersion}\n¿Deseas ir al Discord para actualizar?" :
+                                    $"🔔 New version available: v{result.ServerVersion}\nWould you like to go to Discord to update?";
+                                var title = isSpanish ? "Nueva Versión Detectada" : "New Version Detected";
+                                
+                                var dialogResult = MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Information);
+                                
+                                if (dialogResult == MessageBoxResult.Yes)
+                                {
+                                    try
+                                    {
+                                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                                        {
+                                            FileName = "https://discord.gg/NH6pArJB",
+                                            UseShellExecute = true
+                                        });
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"Error abriendo Discord: {ex.Message}");
+                                    }
+                                }
+                            });
+                            
+                            break; // Solo mostrar una vez por sesión
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error en monitoreo HTTP: {ex.Message}");
+                        await Task.Delay(TimeSpan.FromMinutes(1)); // Reintentar en 1 minuto si hay error
+                    }
+                }
+            });
         }
 
         private void LoadSettings()
@@ -324,85 +619,143 @@ namespace GTAVInjector
         {
             try
             {
-                // Debug logging mejorado
+                // 🔍 VERIFICACIONES BÁSICAS
                 bool gameRunning = InjectionManager.IsGameRunning();
                 bool autoInjectEnabled = SettingsManager.Settings.AutoInject;
                 
-                System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] Tick - Habilitado: {autoInjectEnabled}, Juego: {gameRunning}, Completado: {_autoInjectionCompleted}, GameWasRunning: {_gameWasRunning}");
+                System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] 🔄 Tick - Habilitado: {autoInjectEnabled}, Juego: {gameRunning}, Completado: {_autoInjectionCompleted}");
                 
+                // Salir si autoinyección está deshabilitada
                 if (!autoInjectEnabled)
                 {
-                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] Deshabilitado - saliendo del timer");
+                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ❌ Deshabilitado - deteniendo timer");
+                    _autoInjectTimer?.Stop();
                     return;
                 }
                 
+                // Si no hay juego ejecutándose, resetear estado y esperar
                 if (!gameRunning)
                 {
-                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] Juego no ejecutándose - saliendo del timer");
+                    if (_gameWasRunning)
+                    {
+                        // El juego se cerró, resetear estados
+                        _autoInjectionCompleted = false;
+                        _gameWasRunning = false;
+                        System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] 🔄 Juego cerrado - estado reseteado");
+                    }
                     return;
                 }
                 
-                // Verificar si hay DLLs habilitadas
+                // 🎯 VERIFICAR DLLs DISPONIBLES
                 var enabledDlls = DllEntries.Where(d => d.Enabled).ToList();
                 if (!enabledDlls.Any())
                 {
-                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] No hay DLLs habilitadas - saliendo del timer");
+                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ⚠️ No hay DLLs habilitadas para inyectar");
                     return;
                 }
                 
-                // Verificar si hay DLLs habilitadas no inyectadas
+                // 🔍 VERIFICAR ESTADO DE INYECCIÓN
+                var notInjectedText = LocalizationManager.GetString("NotInjected");
                 var notInjected = enabledDlls.Where(d => 
-                    d.Status == LocalizationManager.GetString("NotInjected") ||
+                    string.IsNullOrEmpty(d.Status) ||
+                    d.Status == notInjectedText ||
                     d.Status.StartsWith("Error:")).ToList();
                 
-                System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] DLLs habilitadas: {enabledDlls.Count}, No inyectadas: {notInjected.Count}");
+                System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] 📊 DLLs habilitadas: {enabledDlls.Count}, Pendientes: {notInjected.Count}");
                 
-                // Si hay DLLs no inyectadas, intentar inyectar independientemente del estado de completado
-                if (notInjected.Any())
-                {
-                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] Iniciando inyección automática...");
-                    StatusText.Text = LocalizationManager.GetString("AutoInjecting");
-                    
-                    // Esperar a que el juego cargue completamente
-                    await Task.Delay(2000);
-                    
-                    // Solo inyectar si el juego sigue ejecutándose después del delay
-                    if (InjectionManager.IsGameRunning())
-                    {
-                        await InjectDllsAsync();
-                        
-                        // Verificar resultados después de la inyección
-                        var stillNotInjected = enabledDlls.Where(d => 
-                            d.Status == LocalizationManager.GetString("NotInjected") ||
-                            d.Status.StartsWith("Error:")).ToList();
-                        
-                        if (!stillNotInjected.Any())
-                        {
-                            _autoInjectionCompleted = true;
-                            System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ✅ Todas las DLLs inyectadas exitosamente");
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] ⚠️ {stillNotInjected.Count} DLLs aún no inyectadas, reintentará en próximo ciclo");
-                        }
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] Juego cerrado durante el delay - cancelando inyección");
-                    }
-                }
-                else
+                // Si no hay DLLs pendientes, marcar como completado
+                if (!notInjected.Any())
                 {
                     if (!_autoInjectionCompleted)
                     {
                         _autoInjectionCompleted = true;
-                        System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ✅ Todas las DLLs ya están inyectadas - marcando como completado");
+                        System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ✅ Todas las DLLs ya inyectadas - completado");
+                        
+                        // Mostrar mensaje de éxito
+                        Dispatcher.Invoke(() =>
+                        {
+                            var currentLang = LocalizationManager.CurrentLanguage;
+                            StatusText.Text = currentLang.ToLower() == "es" ? 
+                                "🚀 Auto-inyección completada" : "🚀 Auto-injection completed";
+                            StatusText.Foreground = System.Windows.Media.Brushes.LimeGreen;
+                        });
                     }
+                    return;
+                }
+                
+                // 🚀 EJECUTAR INYECCIÓN AUTOMÁTICA
+                System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] 🎯 Iniciando inyección automática...");
+                
+                // Actualizar UI
+                Dispatcher.Invoke(() =>
+                {
+                    var currentLang = LocalizationManager.CurrentLanguage;
+                    StatusText.Text = currentLang.ToLower() == "es" ? 
+                        "🔄 Auto-inyectando..." : "🔄 Auto-injecting...";
+                    StatusText.Foreground = System.Windows.Media.Brushes.Orange;
+                });
+                
+                // Esperar a que el juego esté completamente cargado
+                await Task.Delay(3000);
+                
+                // Verificar nuevamente que el juego sigue ejecutándose
+                if (!InjectionManager.IsGameRunning())
+                {
+                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ⚠️ Juego cerrado durante la espera - cancelando");
+                    return;
+                }
+                
+                // 💉 EJECUTAR INYECCIÓN
+                System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] 💉 Ejecutando inyección de DLLs...");
+                await InjectDllsAsync();
+                
+                // 📊 VERIFICAR RESULTADOS
+                var finalCheck = enabledDlls.Where(d => 
+                    string.IsNullOrEmpty(d.Status) ||
+                    d.Status == notInjectedText ||
+                    d.Status.StartsWith("Error:")).ToList();
+                
+                if (!finalCheck.Any())
+                {
+                    _autoInjectionCompleted = true;
+                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ✅ ¡ÉXITO! Todas las DLLs inyectadas correctamente");
+                    
+                    // Mostrar éxito en UI
+                    Dispatcher.Invoke(() =>
+                    {
+                        var currentLang = LocalizationManager.CurrentLanguage;
+                        StatusText.Text = currentLang.ToLower() == "es" ? 
+                            "✅ Auto-inyección exitosa" : "✅ Auto-injection successful";
+                        StatusText.Foreground = System.Windows.Media.Brushes.LimeGreen;
+                    });
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] ⚠️ {finalCheck.Count} DLLs fallaron - reintentará en próximo ciclo");
+                    
+                    // Mostrar estado de reintento
+                    Dispatcher.Invoke(() =>
+                    {
+                        var currentLang = LocalizationManager.CurrentLanguage;
+                        StatusText.Text = currentLang.ToLower() == "es" ? 
+                            $"⚠️ {finalCheck.Count} DLLs fallaron - reintentando..." : 
+                            $"⚠️ {finalCheck.Count} DLLs failed - retrying...";
+                        StatusText.Foreground = System.Windows.Media.Brushes.Yellow;
+                    });
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] ❌ Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] ❌ ERROR CRÍTICO: {ex.Message}");
+                
+                // Mostrar error en UI
+                Dispatcher.Invoke(() =>
+                {
+                    var currentLang = LocalizationManager.CurrentLanguage;
+                    StatusText.Text = currentLang.ToLower() == "es" ? 
+                        "❌ Error en auto-inyección" : "❌ Auto-injection error";
+                    StatusText.Foreground = System.Windows.Media.Brushes.Red;
+                });
             }
         }
 
@@ -708,6 +1061,50 @@ namespace GTAVInjector
             }
         }
 
+        private void AutoInject_Changed(object sender, RoutedEventArgs e)
+        {
+            // Evitar guardar configuración durante la carga inicial
+            if (_isLoadingSettings) 
+            {
+                System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] Cambio ignorado durante carga inicial");
+                return;
+            }
+
+            bool isEnabled = AutoInjectCheckbox.IsChecked == true;
+            
+            System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] Checkbox cambió a: {isEnabled}");
+            
+            // Actualizar configuración
+            SettingsManager.Settings.AutoInject = isEnabled;
+            SettingsManager.SaveSettings();
+            
+            // Controlar el timer de auto-inyección
+            if (isEnabled)
+            {
+                // Activar auto-inyección
+                _autoInjectionCompleted = false; // Resetear estado
+                _autoInjectTimer?.Start();
+                System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ✅ ACTIVADO - Timer iniciado");
+                
+                // Si el juego ya está ejecutándose, intentar inyectar inmediatamente
+                if (InjectionManager.IsGameRunning())
+                {
+                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] Juego detectado - iniciando inyección inmediata");
+                    Task.Run(async () => {
+                        await Task.Delay(1000); // Pequeño delay
+                        Dispatcher.Invoke(() => AutoInjectTimer_Tick(null, EventArgs.Empty));
+                    });
+                }
+            }
+            else
+            {
+                // Desactivar auto-inyección
+                _autoInjectTimer?.Stop();
+                _autoInjectionCompleted = false;
+                System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ❌ DESACTIVADO - Timer detenido");
+            }
+        }
+
         private void GameType_Changed(object sender, RoutedEventArgs e)
         {
             if (_isLoadingSettings) return; // No guardar durante la carga inicial
@@ -866,11 +1263,17 @@ namespace GTAVInjector
                 VersionStatusText.Text = checkingStatusText;
                 VersionStatusText.Foreground = System.Windows.Media.Brushes.Yellow;
 
-                // Forzar verificación (ignorar cache)
-                bool isOutdated = await VersionChecker.ForceCheckForUpdatesAsync();
+                // 🔄 USAR SISTEMA HTTP LOCAL EN LUGAR DE GITHUB
+                // bool isOutdated = await VersionChecker.ForceCheckForUpdatesAsync(); // DESHABILITADO
                 
-                // Obtener información detallada
-                var versionInfo = VersionChecker.GetVersionInfo();
+                // 🚀 VERIFICAR USANDO VALIDADOR HTTP LOCAL
+                var validator = new VersionValidator();
+                var info = await validator.ValidateVersionSilentAsync();
+                bool isOutdated = !info.IsValid && info.ErrorType == ValidationErrorType.VersionMismatch && info.IsClientOutdated;
+                
+                // 🚀 OBTENER INFORMACIÓN DEL SERVIDOR HTTP LOCAL
+                // var versionInfo = VersionChecker.GetVersionInfo(); // DESHABILITADO
+                var serverInfo = await validator.GetServerInfoAsync();
                 
                 // Actualizar interfaz con resultado
                 UpdateVersionStatus(isOutdated);
@@ -882,41 +1285,45 @@ namespace GTAVInjector
 
                 var isSpanish = LocalizationManager.CurrentLanguage.ToLower() == "es";
 
+                // Usar información de la validación en lugar de versionInfo
+                string currentVersion = info.ClientVersion ?? "1.0.8";
+                string serverVersion = info.ServerVersion ?? (serverInfo?.version ?? "Unknown");
+
                 if (isOutdated)
                 {
                     if (isSpanish)
                     {
                         message = $"🆕 ¡Nueva versión disponible!\n\n" +
-                                 $"📱 Versión actual: v{versionInfo.CurrentVersion}\n" +
-                                 $"🔥 Versión nueva: v{versionInfo.LatestVersion}\n\n" +
+                                 $"📱 Versión actual: v{currentVersion}\n" +
+                                 $"🔥 Versión nueva: v{serverVersion}\n\n" +
                                  $"Se recomienda actualizar para obtener las últimas mejoras y correcciones.";
                         title = "Actualización Disponible";
                     }
                     else
                     {
                         message = $"🆕 New version available!\n\n" +
-                                 $"📱 Current version: v{versionInfo.CurrentVersion}\n" +
-                                 $"🔥 Latest version: v{versionInfo.LatestVersion}\n\n" +
+                                 $"📱 Current version: v{currentVersion}\n" +
+                                 $"🔥 Latest version: v{serverVersion}\n\n" +
                                  $"It's recommended to update to get the latest improvements and fixes.";
                         title = "Update Available";
                     }
                     icon = MessageBoxImage.Information;
                 }
-                else if (!string.IsNullOrEmpty(versionInfo.LatestVersion))
+                else if (!string.IsNullOrEmpty(serverVersion))
                 {
                     if (isSpanish)
                     {
                         message = $"✅ ¡Estás usando la versión más reciente!\n\n" +
-                                 $"📱 Versión actual: v{versionInfo.CurrentVersion}\n" +
-                                 $"🌐 Última versión: v{versionInfo.LatestVersion}\n\n" +
+                                 $"📱 Versión actual: v{currentVersion}\n" +
+                                 $"🌐 Última versión: v{serverVersion}\n\n" +
                                  $"No se requiere actualización.";
                         title = "Versión Actualizada";
                     }
                     else
                     {
                         message = $"✅ You're using the latest version!\n\n" +
-                                 $"📱 Current version: v{versionInfo.CurrentVersion}\n" +
-                                 $"🌐 Latest version: v{versionInfo.LatestVersion}\n\n" +
+                                 $"📱 Current version: v{currentVersion}\n" +
+                                 $"🌐 Latest version: v{serverVersion}\n\n" +
                                  $"No update required.";
                         title = "Up to Date";
                     }
@@ -927,14 +1334,14 @@ namespace GTAVInjector
                     if (isSpanish)
                     {
                         message = "⚠️ No se pudo verificar la versión.\n\n" +
-                                 $"📱 Versión actual: v{versionInfo.CurrentVersion}\n\n" +
+                                 $"📱 Versión actual: v{currentVersion}\n\n" +
                                  $"Verifica tu conexión a internet e intenta nuevamente.";
                         title = "Error de Verificación";
                     }
                     else
                     {
                         message = "⚠️ Could not verify version.\n\n" +
-                                 $"📱 Current version: v{versionInfo.CurrentVersion}\n\n" +
+                                 $"📱 Current version: v{currentVersion}\n\n" +
                                  $"Check your internet connection and try again.";
                         title = "Verification Error";
                     }

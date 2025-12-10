@@ -549,7 +549,7 @@
                                Source="pack://application:,,,/Resources/logo tessio.png" VerticalAlignment="Center"/>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="TessioScript Inyector" FontSize="18" FontWeight="Bold" Foreground="#FF9EFF"/>
-                            <TextBlock x:Name="VersionText" Text="v2.0.0" FontSize="10" Foreground="#D3B4FF"/>
+                            <TextBlock x:Name="VersionText" Text="v1.0.8" FontSize="10" Foreground="#D3B4FF"/>
                         </StackPanel>
                     </StackPanel>
                     

@@ -21,7 +21,7 @@ namespace GTAVInjector.Models
             }
             catch
             {
-                return "2.0.0"; // Fallback
+                return "1.0.8"; // Fallback
             }
         }
     }
