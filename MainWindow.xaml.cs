@@ -386,30 +386,31 @@ namespace GTAVInjector
             }
         }
 
+        /// <summary>
+        /// 🚀 SISTEMA DE AUTO-INYECCIÓN SIMPLIFICADO Y DIRECTO
+        /// </summary>
         private async void AutoInjectTimer_Tick(object? sender, EventArgs e)
         {
             try
             {
-                // 🔍 VERIFICACIONES BÁSICAS
+                // Verificaciones básicas
                 bool gameRunning = InjectionManager.IsGameRunning();
                 bool autoInjectEnabled = SettingsManager.Settings.AutoInject;
                 
                 System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] 🔄 Tick - Habilitado: {autoInjectEnabled}, Juego: {gameRunning}, Completado: {_autoInjectionCompleted}");
                 
-                // Salir si autoinyección está deshabilitada
+                // Si auto-inyección está deshabilitada, detener
                 if (!autoInjectEnabled)
                 {
-                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ❌ Deshabilitado - deteniendo timer");
                     _autoInjectTimer?.Stop();
                     return;
                 }
                 
-                // Si no hay juego ejecutándose, resetear estado y esperar
+                // Si no hay juego, resetear estado
                 if (!gameRunning)
                 {
                     if (_gameWasRunning)
                     {
-                        // El juego se cerró, resetear estados
                         _autoInjectionCompleted = false;
                         _gameWasRunning = false;
                         System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] 🔄 Juego cerrado - estado reseteado");
@@ -417,147 +418,55 @@ namespace GTAVInjector
                     return;
                 }
                 
-                // 🎯 VERIFICAR DLLs DISPONIBLES
-                var enabledDlls = DllEntries.Where(d => d.Enabled).ToList();
-                if (!enabledDlls.Any())
+                // Si juego recién detectado y no se ha completado inyección
+                if (gameRunning && !_autoInjectionCompleted)
                 {
-                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ⚠️ No hay DLLs habilitadas para inyectar");
-                    return;
-                }
-                
-                // 🔍 VERIFICAR ESTADO DE INYECCIÓN
-                var notInjectedText = LocalizationManager.GetString("NotInjected");
-                var notInjected = enabledDlls.Where(d => 
-                    string.IsNullOrEmpty(d.Status) ||
-                    d.Status == notInjectedText ||
-                    d.Status.StartsWith("Error:")).ToList();
-                
-                System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] 📊 DLLs habilitadas: {enabledDlls.Count}, Pendientes: {notInjected.Count}");
-                
-                // Si hay DLLs no inyectadas, intentar inyectar
-                if (notInjected.Any())
-                {
-                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] 🎯 Iniciando inyección automática...");
-                    StatusText.Text = LocalizationManager.GetString("AutoInjecting");
-
-                    // Esperar a que el juego cargue completamente
-                    await Task.Delay(2000);
-
-                    // Solo inyectar si el juego sigue ejecutándose después del delay
-                    if (InjectionManager.IsGameRunning())
+                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] 🎯 JUEGO DETECTADO - INYECTANDO INMEDIATAMENTE");
+                    
+                    var enabledDlls = DllEntries.Where(d => d.Enabled).ToList();
+                    if (enabledDlls.Any())
                     {
-                        await InjectDllsAsync();
-
-                        // Verificar resultados después de la inyección
-                        var stillNotInjected = enabledDlls.Where(d =>
-                            d.Status == LocalizationManager.GetString("NotInjected") ||
-                            d.Status.StartsWith("Error:")).ToList();
-
-                        if (!stillNotInjected.Any())
+                        // 💉 INYECCIÓN INMEDIATA
+                        Dispatcher.Invoke(() =>
                         {
+                            StatusText.Text = "🚀 Proceso GTA detectado - inyectando DLLs...";
+                            StatusText.Foreground = System.Windows.Media.Brushes.Orange;
+                        });
+                        
+                        // Pequeña pausa para que el juego se estabilice
+                        await Task.Delay(3000);
+                        
+                        // Verificar que el juego sigue activo
+                        if (InjectionManager.IsGameRunning())
+                        {
+                            await InjectDllsAsync();
                             _autoInjectionCompleted = true;
-                            System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ✅ Todas las DLLs inyectadas exitosamente");
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] ⚠️ {stillNotInjected.Count} DLLs aún no inyectadas, reintentará en próximo ciclo");
+                            
+                            Dispatcher.Invoke(() =>
+                            {
+                                StatusText.Text = "✅ Auto-inyección completada exitosamente";
+                                StatusText.Foreground = System.Windows.Media.Brushes.LimeGreen;
+                            });
+                            
+                            System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ✅ INYECCIÓN COMPLETADA");
                         }
                     }
                     else
                     {
-                        System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] Juego cerrado durante el delay - cancelando inyección");
+                        System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ⚠️ No hay DLLs habilitadas");
+                        _autoInjectionCompleted = true; // Marcar como completado si no hay DLLs
                     }
                 }
-                else
-                {
-                    if (!_autoInjectionCompleted)
-                    {
-                        _autoInjectionCompleted = true;
-                        System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ✅ Todas las DLLs ya inyectadas - completado");
-                        
-                        // Mostrar mensaje de éxito
-                        Dispatcher.Invoke(() =>
-                        {
-                            var currentLang = LocalizationManager.CurrentLanguage;
-                            StatusText.Text = currentLang.ToLower() == "es" ? 
-                                "🚀 Auto-inyección completada" : "🚀 Auto-injection completed";
-                            StatusText.Foreground = System.Windows.Media.Brushes.LimeGreen;
-                        });
-                    }
-                    return;
-                }
                 
-                // 🚀 EJECUTAR INYECCIÓN AUTOMÁTICA
-                System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] 🎯 Iniciando inyección automática...");
-                
-                // Actualizar UI
-                Dispatcher.Invoke(() =>
-                {
-                    var currentLang = LocalizationManager.CurrentLanguage;
-                    StatusText.Text = currentLang.ToLower() == "es" ? 
-                        "🔄 Auto-inyectando..." : "🔄 Auto-injecting...";
-                    StatusText.Foreground = System.Windows.Media.Brushes.Orange;
-                });
-                
-                // Esperar a que el juego esté completamente cargado
-                await Task.Delay(3000);
-                
-                // Verificar nuevamente que el juego sigue ejecutándose
-                if (!InjectionManager.IsGameRunning())
-                {
-                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ⚠️ Juego cerrado durante la espera - cancelando");
-                    return;
-                }
-                
-                // 💉 EJECUTAR INYECCIÓN
-                System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] 💉 Ejecutando inyección de DLLs...");
-                await InjectDllsAsync();
-                
-                // 📊 VERIFICAR RESULTADOS
-                var finalCheck = enabledDlls.Where(d => 
-                    string.IsNullOrEmpty(d.Status) ||
-                    d.Status == notInjectedText ||
-                    d.Status.StartsWith("Error:")).ToList();
-                
-                if (!finalCheck.Any())
-                {
-                    _autoInjectionCompleted = true;
-                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ✅ ¡ÉXITO! Todas las DLLs inyectadas correctamente");
-                    
-                    // Mostrar éxito en UI
-                    Dispatcher.Invoke(() =>
-                    {
-                        var currentLang = LocalizationManager.CurrentLanguage;
-                        StatusText.Text = currentLang.ToLower() == "es" ? 
-                            "✅ Auto-inyección exitosa" : "✅ Auto-injection successful";
-                        StatusText.Foreground = System.Windows.Media.Brushes.LimeGreen;
-                    });
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] ⚠️ {finalCheck.Count} DLLs fallaron - reintentará en próximo ciclo");
-                    
-                    // Mostrar estado de reintento
-                    Dispatcher.Invoke(() =>
-                    {
-                        var currentLang = LocalizationManager.CurrentLanguage;
-                        StatusText.Text = currentLang.ToLower() == "es" ? 
-                            $"⚠️ {finalCheck.Count} DLLs fallaron - reintentando..." : 
-                            $"⚠️ {finalCheck.Count} DLLs failed - retrying...";
-                        StatusText.Foreground = System.Windows.Media.Brushes.Yellow;
-                    });
-                }
+                _gameWasRunning = gameRunning;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] ❌ ERROR CRÍTICO: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] ❌ ERROR: {ex.Message}");
                 
-                // Mostrar error en UI
                 Dispatcher.Invoke(() =>
                 {
-                    var currentLang = LocalizationManager.CurrentLanguage;
-                    StatusText.Text = currentLang.ToLower() == "es" ? 
-                        "❌ Error en auto-inyección" : "❌ Auto-injection error";
+                    StatusText.Text = "❌ Error en auto-inyección";
                     StatusText.Foreground = System.Windows.Media.Brushes.Red;
                 });
             }
@@ -754,8 +663,22 @@ namespace GTAVInjector
             {
                 StatusText.Text = LocalizationManager.GetString("LaunchingGame");
                 InjectionManager.LaunchGame();
-                await Task.Delay(1000);
-                StatusText.Text = LocalizationManager.GetString("GameLaunched");
+                
+                // 🚀 NUEVA FUNCIONALIDAD: Auto-inyectar después del lanzamiento
+                StatusText.Text = "🎯 Juego iniciado - preparando auto-inyección...";
+                await Task.Delay(5000); // Esperar a que el juego cargue
+                
+                // Verificar si hay DLLs para inyectar
+                var enabledDlls = DllEntries.Where(d => d.Enabled).ToList();
+                if (enabledDlls.Any() && InjectionManager.IsGameRunning())
+                {
+                    StatusText.Text = "💉 Auto-inyectando DLLs...";
+                    await InjectDllsAsync();
+                }
+                else
+                {
+                    StatusText.Text = LocalizationManager.GetString("GameLaunched");
+                }
             }
             catch (Exception ex)
             {
