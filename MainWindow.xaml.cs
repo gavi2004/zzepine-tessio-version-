@@ -210,9 +210,8 @@ namespace GTAVInjector
         /// </summary>
         private void EnableFullFunctionality()
         {
-            LaunchButton.IsEnabled = true;
-            InjectButton.IsEnabled = InjectionManager.IsGameRunning();
-            KillButton.IsEnabled = InjectionManager.IsGameRunning();
+            // 🚀 USAR LA LÓGICA CORRECTA DE GESTIÓN DE BOTONES
+            UpdateGameStatus(); // Esto establecerá correctamente el estado de todos los botones
             
             UpdateButton.Visibility = Visibility.Collapsed;
             ChangelogButton.Visibility = Visibility.Visible;
@@ -345,19 +344,21 @@ namespace GTAVInjector
         private void UpdateGameStatus()
         {
             bool isRunning = InjectionManager.IsGameRunning();
+            bool hasInjectedDlls = DllEntries.Any(d => d.Status.Contains("Inyectado"));
 
             if (isRunning)
             {
                 GameStatusText.Text = LocalizationManager.GetString("GameRunning");
                 GameStatusText.Foreground = System.Windows.Media.Brushes.LimeGreen;
 
-                // ✅ MANTENER BOTÓN DE LANZAR HABILITADO (el usuario puede querer lanzar otra instancia)
-                // LaunchButton.IsEnabled = false; // ← REMOVIDO
+                // 🚀 GESTIÓN INTELIGENTE DE BOTONES CUANDO EL JUEGO ESTÁ EJECUTÁNDOSE
+                LaunchButton.IsEnabled = false; // Bloquear lanzar juego si ya está corriendo
                 
-                // Habilitar botones de juego activo
-                InjectButton.IsEnabled = true;
+                // Botón de inyección: habilitado solo si no hay DLLs inyectadas
+                InjectButton.IsEnabled = !hasInjectedDlls;
+                
+                // Botón de cerrar juego: siempre habilitado cuando el juego está corriendo
                 KillButton.IsEnabled = true;
-
 
                 // Si el juego no estaba corriendo antes y ahora sí, resetear auto-inject
                 if (!_gameWasRunning)
@@ -373,10 +374,10 @@ namespace GTAVInjector
                 GameStatusText.Text = LocalizationManager.GetString("GameNotRunning");
                 GameStatusText.Foreground = System.Windows.Media.Brushes.Red;
                 
-                // ✅ MANTENER FUNCIONALIDAD HABILITADA CUANDO NO HAY JUEGO
-                LaunchButton.IsEnabled = true;
-                InjectButton.IsEnabled = false; // Solo deshabilitar inyección si no hay juego
-                KillButton.IsEnabled = false;
+                // 🚀 GESTIÓN CORRECTA DE BOTONES CUANDO EL JUEGO NO ESTÁ EJECUTÁNDOSE
+                LaunchButton.IsEnabled = true;   // Permitir lanzar juego
+                InjectButton.IsEnabled = false;  // No se puede inyectar sin juego
+                KillButton.IsEnabled = false;    // No se puede cerrar lo que no está abierto
 
                 // Si el juego estaba ejecutándose antes y ahora no, resetear el estado
                 if (_gameWasRunning)
@@ -401,6 +402,8 @@ namespace GTAVInjector
                     System.Diagnostics.Debug.WriteLine("Juego cerrado - Estado de auto-inyección reseteado");
                 }
             }
+            
+            System.Diagnostics.Debug.WriteLine($"[BOTONES] Juego: {isRunning}, DLLs inyectadas: {hasInjectedDlls} | Lanzar: {LaunchButton.IsEnabled}, Inyectar: {InjectButton.IsEnabled}, Cerrar: {KillButton.IsEnabled}");
         }
 
         /// <summary>
@@ -757,18 +760,24 @@ namespace GTAVInjector
                             dll.Status = "Error: Hilo remoto fallido";
                             break;
                         default:
-                            MostrarEstado("Fallo en la inyección.", "Error.", System.Windows.Media.Brushes.Yellow);
+                            MostrarEstado("Estado: Fallo en la inyección.", "Error: Fallo desconocido", System.Windows.Media.Brushes.Red);
                             dll.Status = "Error: Fallo desconocido";
                             break;
                     }
                 }
 
                 StatusText.Text = $"Inyección completada: ({injected}/{enabledDlls.Count})";
+                
+                // 🚀 ACTUALIZAR ESTADO DE BOTONES DESPUÉS DE LA INYECCIÓN
+                UpdateGameStatus();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 StatusText.Text = "Inyección falló";
+                
+                // Actualizar botones en caso de error también
+                UpdateGameStatus();
             }
         }
 
