@@ -61,102 +61,65 @@ namespace GTAVInjector.Core
 
         public static bool IsGameRunning()
         {
-            // 🎯 DETECCIÓN PRIORITARIA PARA PROCESOS ESPECÍFICOS
-            var priorityProcessNames = new[]
+            try
             {
-                "GTA5_enhanced",  // GTA V Enhanced (PRIORIDAD)
-                "GTA5",           // GTA V Legacy (PRIORIDAD)
-                "GTAV",           // Variante del nombre
-                "GTA5_Enhanced",  // Variante con mayúscula
-                "GTAVLauncher",   // Launcher del juego
-                "GrandTheftAutoV" // Nombre completo
-            };
-
-            // 🥇 BUSCAR PROCESOS PRIORITARIOS PRIMERO
-            foreach (var processName in priorityProcessNames)
-            {
-                try
+                // 🎯 DETECCIÓN SIMPLIFICADA Y DIRECTA
+                var priorityProcessNames = new[]
                 {
-                    var processes = Process.GetProcessesByName(processName);
-                    if (processes.Any())
+                    "GTA5_enhanced",  // GTA V Enhanced (PRIORIDAD)
+                    "GTA5",           // GTA V Legacy (PRIORIDAD) 
+                    "GTAV",           // Variante del nombre
+                    "GTA5_Enhanced"   // Variante con mayúscula
+                };
+
+                System.Diagnostics.Debug.WriteLine("[DETECCIÓN] 🔍 Iniciando verificación de procesos...");
+
+                // Buscar procesos específicos de GTA
+                foreach (var processName in priorityProcessNames)
+                {
+                    try
                     {
-                        // 🔍 VERIFICAR QUE EL PROCESO ESTÉ REALMENTE ACTIVO
+                        var processes = Process.GetProcessesByName(processName);
+                        System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] Buscando '{processName}' - Encontrados: {processes.Length}");
+                        
                         foreach (var process in processes)
                         {
                             try
                             {
-                                // Verificar que el proceso no haya terminado
-                                if (!process.HasExited)
+                                // Verificar múltiples propiedades para asegurar que está activo
+                                bool isRunning = !process.HasExited && process.Responding;
+                                System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] Proceso {processName} PID:{process.Id} - HasExited:{process.HasExited}, Responding:{process.Responding}");
+                                
+                                if (isRunning)
                                 {
-                                    System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] ✅ Proceso GTA activo: {processName}.exe (PID: {process.Id})");
+                                    System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] ✅ GTA CONFIRMADO ACTIVO: {processName}.exe (PID: {process.Id})");
                                     return true;
                                 }
-                                else
-                                {
-                                    System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] ⚠️ Proceso {processName} encontrado pero terminado (PID: {process.Id})");
-                                }
                             }
-                            catch (InvalidOperationException)
+                            catch (Exception ex)
                             {
-                                // El proceso ya no existe o no podemos acceder a él
-                                System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] ⚠️ Proceso {processName} no accesible o terminado");
+                                System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] Error verificando proceso {processName}: {ex.Message}");
                             }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] Error buscando {processName}: {ex.Message}");
-                }
-            }
-
-            // 🔍 BÚSQUEDA AVANZADA POR DESCRIPCIÓN/TÍTULO DE VENTANA
-            try
-            {
-                var allProcesses = Process.GetProcesses();
-                foreach (var process in allProcesses)
-                {
-                    try
-                    {
-                        // 🔍 VERIFICAR QUE EL PROCESO ESTÉ ACTIVO ANTES DE COMPROBAR
-                        if (process.HasExited)
-                            continue;
-
-                        // Verificar por nombre del proceso (sin .exe)
-                        string processNameLower = process.ProcessName.ToLower();
-                        if (processNameLower.Contains("gta") && 
-                            (processNameLower.Contains("5") || processNameLower.Contains("v")))
-                        {
-                            System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] ✅ GTA encontrado por patrón: {process.ProcessName} (PID: {process.Id})");
-                            return true;
-                        }
-
-                        // Verificar por título de ventana (si tiene ventana principal)
-                        if (!string.IsNullOrEmpty(process.MainWindowTitle))
-                        {
-                            string windowTitle = process.MainWindowTitle.ToLower();
-                            if (windowTitle.Contains("grand theft auto") || 
-                                (windowTitle.Contains("gta") && windowTitle.Contains("v")))
+                            finally
                             {
-                                System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] ✅ GTA encontrado por ventana: {process.MainWindowTitle} (PID: {process.Id})");
-                                return true;
+                                try { process.Dispose(); } catch { }
                             }
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Ignorar errores de acceso a procesos específicos
+                        System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] Error obteniendo procesos {processName}: {ex.Message}");
                     }
                 }
+
+                System.Diagnostics.Debug.WriteLine("[DETECCIÓN] ❌ NINGÚN PROCESO DE GTA ENCONTRADO");
+                return false;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] Error en búsqueda avanzada: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[DETECCIÓN] ❌ ERROR CRÍTICO: {ex.Message}");
+                return false;
             }
-
-            // 📊 SI NO SE ENCUENTRA NINGÚN PROCESO, REGISTRAR PARA DEBUGGING
-            System.Diagnostics.Debug.WriteLine("[DETECCIÓN] ❌ No se encontró ningún proceso de GTA activo");
-            return false;
         }
 
         public static void LaunchGame()
