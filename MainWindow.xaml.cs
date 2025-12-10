@@ -56,6 +56,24 @@ namespace GTAVInjector
                     // Desactivar bandera DESPUÉS de que todo esté completamente cargado
                     _isLoadingSettings = false;
                     System.Diagnostics.Debug.WriteLine("[LOADING] Bandera _isLoadingSettings desactivada - eventos habilitados");
+                    
+                    // 🚀 INICIAR AUTOINYECCIÓN DESPUÉS DE LA CARGA COMPLETA
+                    if (SettingsManager.Settings.AutoInject)
+                    {
+                        System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ✅ Iniciando timer después de carga completa");
+                        _autoInjectionCompleted = false; // Resetear estado
+                        _autoInjectTimer?.Start();
+                        
+                        // Si el juego ya está corriendo al iniciar la aplicación, intentar inyectar
+                        if (InjectionManager.IsGameRunning())
+                        {
+                            System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] Juego detectado al iniciar - programando inyección inmediata");
+                            Task.Run(async () => {
+                                await Task.Delay(2000); // Delay corto para asegurar estabilidad
+                                Dispatcher.Invoke(() => AutoInjectTimer_Tick(null, EventArgs.Empty));
+                            });
+                        }
+                    }
                 }), System.Windows.Threading.DispatcherPriority.Loaded);
             };
         }
@@ -280,12 +298,11 @@ namespace GTAVInjector
             // Cargar auto-inject
             AutoInjectCheckbox.IsChecked = settings.AutoInject;
 
-            // Iniciar timer de auto-inject si está habilitado
+            // NO iniciar el timer aquí - se hará después de la inicialización completa
             if (settings.AutoInject)
             {
-                System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] Habilitado en configuración - iniciando timer");
+                System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] Habilitado en configuración - será iniciado después de la inicialización");
                 _autoInjectionCompleted = false; // Resetear estado al cargar
-                _autoInjectTimer?.Start();
             }
 
             // Cargar idioma
