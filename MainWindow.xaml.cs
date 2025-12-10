@@ -354,8 +354,8 @@ namespace GTAVInjector
                 // 🚀 GESTIÓN INTELIGENTE DE BOTONES CUANDO EL JUEGO ESTÁ EJECUTÁNDOSE
                 LaunchButton.IsEnabled = false; // Bloquear lanzar juego si ya está corriendo
                 
-                // Botón de inyección: habilitado solo si no hay DLLs inyectadas
-                InjectButton.IsEnabled = !hasInjectedDlls;
+                // Botón de inyección: habilitado solo si no hay DLLs inyectadas Y la versión es válida
+                InjectButton.IsEnabled = !hasInjectedDlls && IsVersionValid();
                 
                 // Botón de cerrar juego: siempre habilitado cuando el juego está corriendo
                 KillButton.IsEnabled = true;
@@ -374,9 +374,13 @@ namespace GTAVInjector
                 GameStatusText.Text = LocalizationManager.GetString("GameNotRunning");
                 GameStatusText.Foreground = System.Windows.Media.Brushes.Red;
                 
-                // 🚀 GESTIÓN CORRECTA DE BOTONES CUANDO EL JUEGO NO ESTÁ EJECUTÁNDOSE
+                // 🚀 NUEVA LÓGICA: Permitir inyección incluso sin juego ejecutándose
                 LaunchButton.IsEnabled = true;   // Permitir lanzar juego
-                InjectButton.IsEnabled = false;  // No se puede inyectar sin juego
+                
+                // 🎯 CORRECCIÓN: El botón de inyección se habilita si la versión es válida
+                // (aunque no haya juego ejecutándose - el usuario puede querer tenerlo listo)
+                InjectButton.IsEnabled = IsVersionValid(); // Solo bloquear por versión obsoleta
+                
                 KillButton.IsEnabled = false;    // No se puede cerrar lo que no está abierto
 
                 // Si el juego estaba ejecutándose antes y ahora no, resetear el estado
@@ -403,7 +407,49 @@ namespace GTAVInjector
                 }
             }
             
-            System.Diagnostics.Debug.WriteLine($"[BOTONES] Juego: {isRunning}, DLLs inyectadas: {hasInjectedDlls} | Lanzar: {LaunchButton.IsEnabled}, Inyectar: {InjectButton.IsEnabled}, Cerrar: {KillButton.IsEnabled}");
+            System.Diagnostics.Debug.WriteLine($"[BOTONES] Juego: {isRunning}, DLLs inyectadas: {hasInjectedDlls}, Versión válida: {IsVersionValid()} | Lanzar: {LaunchButton.IsEnabled}, Inyectar: {InjectButton.IsEnabled}, Cerrar: {KillButton.IsEnabled}");
+        }
+
+        /// <summary>
+        /// 🔍 VERIFICAR SI LA VERSIÓN DEL INYECTOR ES VÁLIDA
+        /// </summary>
+        private bool IsVersionValid()
+        {
+            try
+            {
+                // Verificar si los botones están bloqueados por versión obsoleta crítica
+                // Si el LaunchButton está deshabilitado por versión, entonces la versión es inválida
+                
+                // Verificar el texto del estado de versión para determinar si hay bloqueo crítico
+                if (VersionStatusText != null)
+                {
+                    string statusText = VersionStatusText.Text?.ToLower() ?? "";
+                    
+                    // Si contiene "crítico" o "desactualizado (crítico)", la versión es inválida
+                    if (statusText.Contains("crítico") || statusText.Contains("critical"))
+                    {
+                        System.Diagnostics.Debug.WriteLine("[VERSION] ❌ Versión crítica detectada - bloqueando inyección");
+                        return false;
+                    }
+                    
+                    // Si el color es rojo y contiene "desactualizado", verificar si es crítico
+                    if (VersionStatusText.Foreground == System.Windows.Media.Brushes.Red && 
+                        statusText.Contains("desactualizado"))
+                    {
+                        System.Diagnostics.Debug.WriteLine("[VERSION] ⚠️ Versión desactualizada crítica - bloqueando inyección");
+                        return false;
+                    }
+                }
+                
+                // En todos los demás casos, permitir la inyección
+                System.Diagnostics.Debug.WriteLine("[VERSION] ✅ Versión válida - permitiendo inyección");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VERSION] ⚠️ Error verificando versión: {ex.Message} - permitiendo por defecto");
+                return true; // En caso de error, permitir funcionamiento
+            }
         }
 
         /// <summary>
@@ -716,6 +762,19 @@ namespace GTAVInjector
         {
             try
             {
+                // 🎯 VERIFICAR SI HAY UN JUEGO EJECUTÁNDOSE
+                if (!InjectionManager.IsGameRunning())
+                {
+                    var currentLang = LocalizationManager.CurrentLanguage;
+                    string message = currentLang.ToLower() == "es" ? 
+                        "No se puede inyectar: GTA V no está ejecutándose.\n\nPor favor, inicia GTA V primero." : 
+                        "Cannot inject: GTA V is not running.\n\nPlease start GTA V first.";
+                    string title = currentLang.ToLower() == "es" ? "Juego No Ejecutándose" : "Game Not Running";
+                    
+                    MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 var enabledDlls = DllEntries.Where(d => d.Enabled).ToList();
 
                 if (!enabledDlls.Any())
