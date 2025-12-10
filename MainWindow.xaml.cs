@@ -433,8 +433,8 @@ namespace GTAVInjector
                             StatusText.Foreground = System.Windows.Media.Brushes.Orange;
                         });
                         
-                        // Pequeña pausa para que el juego se estabilice
-                        await Task.Delay(3000);
+                        // Esperar 15 segundos para que el proceso se estabilice completamente
+                        await Task.Delay(15000);
                         
                         // Verificar que el juego sigue activo
                         if (InjectionManager.IsGameRunning())
@@ -665,8 +665,8 @@ namespace GTAVInjector
                 InjectionManager.LaunchGame();
                 
                 // 🚀 NUEVA FUNCIONALIDAD: Auto-inyectar después del lanzamiento
-                StatusText.Text = "🎯 Juego iniciado - preparando auto-inyección...";
-                await Task.Delay(5000); // Esperar a que el juego cargue
+                StatusText.Text = "🎯 Juego iniciado - esperando 15 segundos para estabilizar...";
+                await Task.Delay(15000); // Esperar 15 segundos para que el juego se estabilice completamente
                 
                 // Verificar si hay DLLs para inyectar
                 var enabledDlls = DllEntries.Where(d => d.Enabled).ToList();
