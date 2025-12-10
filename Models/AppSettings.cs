@@ -11,8 +11,8 @@ namespace GTAVInjector.Models
         public List<DllEntry> DllEntries { get; set; } = new();
         public bool AutoInject { get; set; } = false;
         public string Language { get; set; } = "es";
-        public string Version { get; set; } = GetVersionFromFile();
         
+<<<<<<< HEAD
         private static string GetVersionFromFile()
         {
             try
@@ -24,5 +24,9 @@ namespace GTAVInjector.Models
                 return "1.0.8"; // Fallback
             }
         }
+=======
+        
+      
+>>>>>>> 7a095037b6e428a92d07b5088743ba1de5902003
     }
 }
