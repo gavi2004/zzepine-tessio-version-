@@ -11,7 +11,7 @@
     <ApplicationIcon>Resources\icon tessio.ico</ApplicationIcon>
     <AssemblyName>GTA GGS Launcher</AssemblyName>
     <RootNamespace>GTAVInjector</RootNamespace>
-    <Version>1.0.8</Version>
+    <Version>1.0.7</Version>
     <Authors>Reisita and Tessio</Authors>
     <Company>GGS Team</Company>
     <Product>GTAV Injector Enhanced</Product>

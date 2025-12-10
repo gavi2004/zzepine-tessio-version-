@@ -34,7 +34,6 @@ namespace GTAVInjector
         {
             InitializeComponent();
 
-<<<<<<< HEAD
             // Timer cada 10 segundos para validación HTTP
             _httpVersionTimer.Interval = TimeSpan.FromSeconds(30);
             _httpVersionTimer.Tick += HttpVersionTimer_Tick;
@@ -46,10 +45,6 @@ namespace GTAVInjector
 
             // Timer para verificación legacy (mantener como fallback)
             versionCheckTimer.Interval = TimeSpan.FromSeconds(10);
-=======
-            // Timer cada 10 segundos
-            versionCheckTimer.Interval = TimeSpan.FromMinutes(5);
->>>>>>> 7a095037b6e428a92d07b5088743ba1de5902003
             versionCheckTimer.Tick += VersionCheckTimer_Tick;
             versionCheckTimer.Start();
 
@@ -583,28 +578,18 @@ namespace GTAVInjector
                 // 🔍 VERIFICACIONES BÁSICAS
                 bool gameRunning = InjectionManager.IsGameRunning();
                 bool autoInjectEnabled = SettingsManager.Settings.AutoInject;
-<<<<<<< HEAD
                 
                 System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] 🔄 Tick - Habilitado: {autoInjectEnabled}, Juego: {gameRunning}, Completado: {_autoInjectionCompleted}");
                 
                 // Salir si autoinyección está deshabilitada
-=======
-
-                System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] Tick - Habilitado: {autoInjectEnabled}, Juego: {gameRunning}, Completado: {_autoInjectionCompleted}, GameWasRunning: {_gameWasRunning}");
-
->>>>>>> 7a095037b6e428a92d07b5088743ba1de5902003
                 if (!autoInjectEnabled)
                 {
                     System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ❌ Deshabilitado - deteniendo timer");
                     _autoInjectTimer?.Stop();
                     return;
                 }
-<<<<<<< HEAD
                 
                 // Si no hay juego ejecutándose, resetear estado y esperar
-=======
-
->>>>>>> 7a095037b6e428a92d07b5088743ba1de5902003
                 if (!gameRunning)
                 {
                     if (_gameWasRunning)
@@ -616,20 +601,14 @@ namespace GTAVInjector
                     }
                     return;
                 }
-<<<<<<< HEAD
                 
                 // 🎯 VERIFICAR DLLs DISPONIBLES
-=======
-
-                // Verificar si hay DLLs habilitadas
->>>>>>> 7a095037b6e428a92d07b5088743ba1de5902003
                 var enabledDlls = DllEntries.Where(d => d.Enabled).ToList();
                 if (!enabledDlls.Any())
                 {
                     System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ⚠️ No hay DLLs habilitadas para inyectar");
                     return;
                 }
-<<<<<<< HEAD
                 
                 // 🔍 VERIFICAR ESTADO DE INYECCIÓN
                 var notInjectedText = LocalizationManager.GetString("NotInjected");
@@ -640,21 +619,10 @@ namespace GTAVInjector
                 
                 System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] 📊 DLLs habilitadas: {enabledDlls.Count}, Pendientes: {notInjected.Count}");
                 
-                // Si no hay DLLs pendientes, marcar como completado
-                if (!notInjected.Any())
-=======
-
-                // Verificar si hay DLLs habilitadas no inyectadas
-                var notInjected = enabledDlls.Where(d =>
-                    d.Status == LocalizationManager.GetString("NotInjected") ||
-                    d.Status.StartsWith("Error:")).ToList();
-
-                System.Diagnostics.Debug.WriteLine($"[AUTO-INJECT] DLLs habilitadas: {enabledDlls.Count}, No inyectadas: {notInjected.Count}");
-
-                // Si hay DLLs no inyectadas, intentar inyectar independientemente del estado de completado
+                // Si hay DLLs no inyectadas, intentar inyectar
                 if (notInjected.Any())
                 {
-                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] Iniciando inyección automática...");
+                    System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] 🎯 Iniciando inyección automática...");
                     StatusText.Text = LocalizationManager.GetString("AutoInjecting");
 
                     // Esperar a que el juego cargue completamente
@@ -686,7 +654,6 @@ namespace GTAVInjector
                     }
                 }
                 else
->>>>>>> 7a095037b6e428a92d07b5088743ba1de5902003
                 {
                     if (!_autoInjectionCompleted)
                     {
@@ -1159,29 +1126,6 @@ namespace GTAVInjector
             SettingsManager.SaveSettings();
         }
 
-        private void AutoInject_Changed(object sender, RoutedEventArgs e)
-        {
-            if (_isLoadingSettings) return; // No guardar durante la carga inicial
-
-            bool isEnabled = AutoInjectCheckbox.IsChecked == true;
-            SettingsManager.Settings.AutoInject = isEnabled;
-            SettingsManager.SaveSettings();
-
-            if (isEnabled)
-            {
-                // Resetear estado cuando se activa manualmente
-                _autoInjectionCompleted = false;
-                _gameWasRunning = false; // Resetear para forzar nueva detección
-                _autoInjectTimer?.Start();
-                System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ✅ Activado manualmente - timer iniciado y estado reseteado");
-            }
-            else
-            {
-                _autoInjectTimer?.Stop();
-                _autoInjectionCompleted = false; // Resetear para próxima activación
-                System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] ❌ Desactivado manualmente - timer detenido");
-            }
-        }
 
         private void LanguageSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
@@ -1250,34 +1194,13 @@ namespace GTAVInjector
             }
         }
 
-        private void Changelog_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "https://github.com/Tessio/TessioScript-Launcher/releases",
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error al abrir changelog: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
         // ✨ NUEVO MÉTODO PARA VERIFICAR ACTUALIZACIONES MANUALMENTE ✨
         private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Deshabilitar el botón mientras se verifica
-                if (CheckUpdatesButton != null)
-                {
-                    CheckUpdatesButton.IsEnabled = false;
-                    var checkingText = LocalizationManager.CurrentLanguage.ToLower() == "es" ? "🔄 Verificando..." : "🔄 Checking...";
-                    CheckUpdatesButton.Content = checkingText;
-                }
+                // Deshabilitar el botón mientras se verifica (si existe)
+                // CheckUpdatesButton puede no existir en esta versión del XAML
 
                 // Actualizar estado de la interfaz
                 var checkingStatusText = LocalizationManager.CurrentLanguage.ToLower() == "es" ? 
@@ -1299,7 +1222,7 @@ namespace GTAVInjector
                 var serverInfo = await validator.GetServerInfoAsync();
                 
                 // Actualizar interfaz con resultado
-                UpdateVersionStatus(isOutdated);
+                // UpdateVersionStatus(isOutdated); // Método no disponible en esta versión
 
                 // Mostrar mensaje informativo localizado
                 string message;
@@ -1394,12 +1317,8 @@ namespace GTAVInjector
             }
             finally
             {
-                // Rehabilitar el botón
-                if (CheckUpdatesButton != null)
-                {
-                    CheckUpdatesButton.IsEnabled = true;
-                    CheckUpdatesButton.Content = LocalizationManager.GetString("CheckUpdates");
-                }
+                // Rehabilitar el botón (si existe)
+                // CheckUpdatesButton puede no existir en esta versión del XAML
             }
         }
 

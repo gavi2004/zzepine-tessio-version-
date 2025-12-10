@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -321,16 +322,16 @@ namespace GTAVInjector.Core
                 try
                 {
                     var allProcesses = Process.GetProcesses();
-                    foreach (var process in allProcesses)
+                    foreach (var proc in allProcesses)
                     {
                         try
                         {
-                            string processNameLower = process.ProcessName.ToLower();
+                            string processNameLower = proc.ProcessName.ToLower();
                             if (processNameLower.Contains("gta") && 
                                 (processNameLower.Contains("5") || processNameLower.Contains("v")))
                             {
-                                targetProcess = process;
-                                System.Diagnostics.Debug.WriteLine($"[INYECCIÓN] 🎯 Proceso encontrado por patrón: {process.ProcessName} (PID: {process.Id})");
+                                targetProcess = proc;
+                                System.Diagnostics.Debug.WriteLine($"[INYECCIÓN] 🎯 Proceso encontrado por patrón: {proc.ProcessName} (PID: {proc.Id})");
                                 break;
                             }
                         }
