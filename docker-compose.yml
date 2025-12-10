@@ -8,8 +8,6 @@ services:
     container_name: gtav-injector-server
     ports:
       - "4569:4569"
-    volumes:
-      - ./config.json:/app/config.json:ro
     environment:
       - NODE_ENV=production
       - PORT=4569
