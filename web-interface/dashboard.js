@@ -32,18 +32,53 @@
     finally{ btn.disabled=false; btn.innerHTML='<i class="fas fa-key"></i> Actualizar contraseña'; }
   });
 
-  // Fetch remote version
-  const fetchBtn = document.getElementById('fetchRemoteBtn');
+  // Update version (remote or manual)
   const resultEl = document.getElementById('remoteResult');
-  fetchBtn.addEventListener('click', async ()=>{
-    fetchBtn.disabled=true; fetchBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Sincronizando...'; resultEl.textContent='';
+  const applyBtn = document.getElementById('applyVersionBtn');
+  const manualInput = document.getElementById('manualVersion');
+  const methodRadios = Array.from(document.querySelectorAll('input[name="verMethod"]'));
+  const remoteHelp = document.getElementById('remoteHelp');
+  const manualGroup = document.getElementById('manualGroup');
+
+  function updateUiByMethod(){
+    const method = (methodRadios.find(r=>r.checked)||{}).value;
+    const isRemote = method === 'remote';
+    remoteHelp.style.display = isRemote ? 'block' : 'none';
+    manualGroup.style.display = isRemote ? 'none' : 'block';
+  }
+  methodRadios.forEach(r => r.addEventListener('change', updateUiByMethod));
+  updateUiByMethod();
+
+  applyBtn.addEventListener('click', async ()=>{
+    const method = (methodRadios.find(r=>r.checked)||{}).value;
+    resultEl.textContent='';
+    applyBtn.disabled=true; applyBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Aplicando...';
     try{
-      const res = await fetch(`${apiBase}/api/version/fetch-remote`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
-      if(!data.success) throw new Error(data.message||'Error');
-      toast('success', data.message);
-      resultEl.textContent = data.changed ? `Actualizado: ${data.oldVersion} → ${data.newVersion}` : `Sin cambios. Versión actual: ${data.version || data.newVersion}`;
+      if(method === 'remote'){
+        const res = await fetch(`${apiBase}/api/version/fetch-remote`, { method:'POST', headers:{ 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        if(!data.success) throw new Error(data.message||'Error');
+        toast('success', data.message);
+        resultEl.textContent = data.changed ? `Actualizado: ${data.oldVersion} → ${data.newVersion}` : `Sin cambios. Versión actual: ${data.version || data.newVersion}`;
+      } else {
+        const v = manualInput.value.trim();
+        if(!/^\d+\.\d+\.\d+$/.test(v)) throw new Error('Versión inválida. Usa formato x.y.z');
+        const res = await fetch(`${apiBase}/api/version`, { method:'PUT', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ version: v }) });
+        const data = await res.json();
+        if(!data.success) throw new Error(data.message||'Error');
+        toast('success', `Versión establecida a ${v}`);
+        resultEl.textContent = `Versión actualizada a ${v}`;
+      }
     }catch(e){ toast('error', e.message); }
-    finally{ fetchBtn.disabled=false; fetchBtn.innerHTML='<i class="fas fa-sync-alt"></i> Obtener y aplicar versión'; }
+    finally{ applyBtn.disabled=false; applyBtn.innerHTML='<i class="fas fa-sync-alt"></i> Aplicar'; }
+  });
+
+  // Show current version
+  document.getElementById('refreshCurrentBtn').addEventListener('click', async ()=>{
+    try{
+      const res = await fetch(`${apiBase}/api/version`);
+      const data = await res.json();
+      resultEl.textContent = data?.version ? `Versión actual: ${data.version}` : 'No se pudo obtener la versión actual';
+    }catch(e){ resultEl.textContent = 'No se pudo obtener la versión actual'; }
   });
 })();
