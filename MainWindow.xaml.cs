@@ -339,6 +339,12 @@ namespace GTAVInjector
                 _autoInjectTimer.Start();
                 System.Diagnostics.Debug.WriteLine("[AUTO-INJECT] Timer iniciado en InitializeTimers");
             }
+
+            // Timer para verificación periódica de versión (cada 15 segundos)
+            versionCheckTimer.Interval = TimeSpan.FromSeconds(15);
+            versionCheckTimer.Tick += VersionTimer_Tick;
+            versionCheckTimer.Start();
+            System.Diagnostics.Debug.WriteLine("[VERSION] Timer de verificación iniciado (15s)");
         }
 
         private void UpdateGameStatus()
@@ -949,6 +955,27 @@ namespace GTAVInjector
             SettingsManager.SaveSettings();
         }
 
+
+        private async void VersionTimer_Tick(object? sender, EventArgs e)
+        {
+            try
+            {
+                var validator = new VersionValidator();
+                var info = await validator.ValidateVersionSilentAsync();
+
+                // Actualizar la UI en el hilo del dispatcher
+                Dispatcher.Invoke(() =>
+                {
+                    HandleVersionValidationResult(info);
+                });
+
+                System.Diagnostics.Debug.WriteLine($"[VERSION] Verificación periódica: {info.ErrorType} - {info.Message}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VERSION] Error en verificación periódica: {ex.Message}");
+            }
+        }
 
         private void LanguageSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
