@@ -37,11 +37,11 @@ if not exist "node_modules" (
 )
 
 REM Iniciar servidor
-echo Servidor iniciando en puerto 3000...
+echo Servidor iniciando en puerto 4569...
 echo.
 echo URLs disponibles:
-echo  - Panel web: http://localhost:3000
-echo  - API Version: http://localhost:3000/api/version
+echo  - Panel web: http://localhost:4569
+echo  - API Version: http://localhost:4569/api/version
 echo.
 echo Presiona Ctrl+C para detener el servidor
 echo.

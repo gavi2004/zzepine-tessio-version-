@@ -18,6 +18,17 @@
                 <i class="fas fa-circle"></i>
                 <span>Conectando...</span>
             </div>
+            <div id="authSection" class="auth-section">
+                <div id="authInfo" class="auth-info hidden">
+                    <span id="currentUser"></span>
+                    <button id="logoutBtn" class="btn btn-small">Salir</button>
+                </div>
+                <div id="loginForm" class="login-form">
+                    <input type="text" id="loginUser" placeholder="Usuario">
+                    <input type="password" id="loginPass" placeholder="Contraseña">
+                    <button id="loginBtn" class="btn btn-small btn-primary">Ingresar</button>
+                </div>
+            </div>
         </header>
 
         <main class="main-content">
@@ -59,7 +70,7 @@
                         
                         <div class="input-group">
                             <label for="adminKey">Clave de Administrador:</label>
-                            <input type="password" id="adminKey" placeholder="Ingresa la clave de admin">
+                            <input type="password" id="adminKey" placeholder="Ingresa la clave de admin (opcional - legacy)">
                         </div>
 
                         <div class="button-group">
@@ -90,16 +101,63 @@
                         </button>
                     </div>
                     
-                    <div id="validationResult" class="validation-result hidden">
-                        <!-- Los resultados aparecerán aquí -->
-                    </div>
+                    <div id="validationResult" class="validation-result hidden"></div>
                 </div>
             </section>
 
-            <!-- Log de actividad -->
+            <!-- Historial de versiones -->
+            <section class="card history-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-clock"></i> Historial de Versiones</h2>
+                    <button id="refreshHistoryBtn" class="btn btn-small"><i class="fas fa-rotate"></i> Actualizar</button>
+                </div>
+                <div class="card-body">
+                    <table class="table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Versión</th>
+                                <th>Usuario</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Auditoría -->
+            <section class="card audit-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-list"></i> Auditoría</h2>
+                    <div class="filters">
+                        <input type="text" id="auditQ" placeholder="Buscar...">
+                        <input type="date" id="auditFrom">
+                        <input type="date" id="auditTo">
+                        <button id="refreshAuditsBtn" class="btn btn-small"><i class="fas fa-rotate"></i> Filtrar</button>
+                        <button id="exportAuditsBtn" class="btn btn-small btn-secondary"><i class="fas fa-file-export"></i> Exportar CSV</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table class="table" id="auditTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Acción</th>
+                                <th>Usuario</th>
+                                <th>Detalles</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Log de actividad (local de la UI) -->
             <section class="card log-card">
                 <div class="card-header">
-                    <h2><i class="fas fa-list"></i> Log de Actividad</h2>
+                    <h2><i class="fas fa-terminal"></i> Log de Actividad (UI)</h2>
                     <button id="clearLogBtn" class="btn btn-small btn-danger">
                         <i class="fas fa-trash"></i> Limpiar
                     </button>

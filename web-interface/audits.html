@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auditorías - GTAV Injector</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo"><i class="fas fa-rocket"></i><h1>Auditorías</h1></div>
+      <nav class="auth-section">
+        <a class="btn btn-small" href="/dashboard">Panel</a>
+        <a class="btn btn-small" href="/dashboard">Dashboard</a>
+        <span id="currentUser"></span>
+        <button id="logoutBtn" class="btn btn-small">Salir</button>
+      </nav>
+    </header>
+    <main class="main-content">
+      <section class="card audit-card">
+        <div class="card-header">
+          <h2><i class="fas fa-list"></i> Auditoría</h2>
+          <div class="filters">
+            <input type="text" id="auditQ" placeholder="Buscar...">
+            <input type="date" id="auditFrom">
+            <input type="date" id="auditTo">
+            <button id="refreshAuditsBtn" class="btn btn-small"><i class="fas fa-rotate"></i> Filtrar</button>
+            <button id="exportAuditsBtn" class="btn btn-small btn-secondary"><i class="fas fa-file-export"></i> Exportar CSV</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <table class="table" id="auditTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Acción</th>
+                <th>Usuario</th>
+                <th>Detalles</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+  <script src="audits.js"></script>
+</body>
+</html>

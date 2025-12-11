@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usuarios - GTAV Injector</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo"><i class="fas fa-users"></i><h1>Usuarios</h1></div>
+      <nav class="auth-section">
+        <a class="btn btn-small" href="/dashboard">Panel</a>
+        <a class="btn btn-small" href="/audits">Auditorías</a>
+        <span id="currentUser"></span>
+        <button id="logoutBtn" class="btn btn-small">Salir</button>
+      </nav>
+    </header>
+    <main class="main-content">
+      <section class="card">
+        <div class="card-header"><h2><i class="fas fa-user-plus"></i> Crear Usuario</h2></div>
+        <div class="card-body">
+          <div class="input-group"><label>Usuario</label><input id="newUser" type="text" /></div>
+          <div class="input-group"><label>Contraseña</label><input id="newPass" type="password" /></div>
+          <div class="input-group"><label>Rol</label>
+            <select id="newRole"><option value="admin">admin</option><option value="user">user</option></select>
+          </div>
+          <button id="createUserBtn" class="btn btn-primary"><i class="fas fa-plus"></i> Crear</button>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-header"><h2><i class="fas fa-list"></i> Lista de usuarios</h2> <button id="refreshBtn" class="btn btn-small"><i class="fas fa-rotate"></i> Actualizar</button></div>
+        <div class="card-body">
+          <table class="table" id="usersTable"><thead><tr><th>ID</th><th>Usuario</th><th>Rol</th><th>Creado</th><th>Último login</th></tr></thead><tbody></tbody></table>
+        </div>
+      </section>
+    </main>
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+  <script src="users.js"></script>
+</body>
+</html>

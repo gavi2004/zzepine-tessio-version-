@@ -1,4 +1,4 @@
-:root {
+:root {\n  --muted: #6b7280;
     --primary-color: #2563eb;
     --secondary-color: #64748b;
     --success-color: #10b981;
@@ -438,7 +438,7 @@ body {
     max-width: 350px;
 }
 
-.toast.success { background: var(--success-color); }
+.toast.success { background: var(--success-color); }\n\n/* Simple tables */\n.table { width: 100%; border-collapse: collapse; font-size: 14px; }\n.table th, .table td { border-bottom: 1px solid var(--border-color); padding: 8px 10px; text-align: left; }\n.table th { color: var(--muted); font-weight: 600; }\n\n.auth-section { display: flex; gap: 10px; align-items: center; }\n.login-form input { padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 6px; }\n.login-form button { margin-left: 6px; }\n.auth-info { display: flex; gap: 10px; align-items: center; }\n.hidden { display: none; }\n.filters { display: flex; gap: 8px; align-items: center; }\n
 .toast.error { background: var(--danger-color); }
 .toast.warning { background: var(--warning-color); }
 .toast.info { background: var(--info-color); }

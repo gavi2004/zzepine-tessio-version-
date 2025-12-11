@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - GTAV Injector</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo"><i class="fas fa-rocket"></i><h1>Dashboard</h1></div>
+      <nav class="auth-section">
+        <a class="btn btn-small" href="/dashboard">Panel</a>
+        <a class="btn btn-small" href="/audits">Auditorías</a>
+        <a class="btn btn-small" href="/users">Usuarios</a>
+        <span id="currentUser"></span>
+        <button id="logoutBtn" class="btn btn-small">Salir</button>
+      </nav>
+    </header>
+    <main class="main-content">
+      <section class="card">
+        <div class="card-header"><h2><i class="fas fa-user"></i> Mi Cuenta</h2></div>
+        <div class="card-body">
+          <div class="info-grid">
+            <div class="info-item"><label>Usuario:</label> <span id="username">-</span></div>
+            <div class="info-item"><label>Rol:</label> <span id="role">-</span></div>
+          </div>
+          <hr />
+          <h3>Cambiar contraseña</h3>
+          <div class="input-group">
+            <label>Contraseña actual</label>
+            <input type="password" id="currentPassword" placeholder="Contraseña actual" />
+          </div>
+          <div class="input-group">
+            <label>Nueva contraseña</label>
+            <input type="password" id="newPassword" placeholder="Nueva contraseña" />
+          </div>
+          <div class="input-group">
+            <label>Confirmar nueva contraseña</label>
+            <input type="password" id="confirmPassword" placeholder="Confirmar nueva contraseña" />
+          </div>
+          <button class="btn btn-primary" id="changePassBtn"><i class="fas fa-key"></i> Actualizar contraseña</button>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-header"><h2><i class="fas fa-cloud-download-alt"></i> Sincronizar versión remota</h2></div>
+        <div class="card-body">
+          <p>Obtiene la versión desde: <code>https://raw.githubusercontent.com/Tessio/Translations/refs/heads/master/version_l.txt</code></p>
+          <button class="btn btn-secondary" id="fetchRemoteBtn"><i class="fas fa-sync-alt"></i> Obtener y aplicar versión</button>
+          <div id="remoteResult" style="margin-top:10px;color:var(--muted);"></div>
+        </div>
+      </section>
+    </main>
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+  <script src="dashboard.js"></script>
+</body>
+</html>

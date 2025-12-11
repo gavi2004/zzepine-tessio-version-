@@ -6,10 +6,15 @@
   "scripts": {
     "start": "node version-server.js",
     "dev": "nodemon version-server.js",
-    "test": "node test-client.js"
+    "test": "node test-client.js",
+    "create-user": "node scripts/create-user.js",
+    "user": "node scripts/create-user-run.js"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "mongoose": "^8.8.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

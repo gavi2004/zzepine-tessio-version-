@@ -1,6 +1,15 @@
 version: '3.8'
 
 services:
+  mongo:
+    image: mongo:6
+    container_name: gtav-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - gtav-network
+
   gtav-injector-server:
     build:
       context: .
@@ -11,6 +20,9 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=4569
+      - MONGODB_URI=mongodb://mongo:27017/gtav_injector
+    depends_on:
+      - mongo
     restart: unless-stopped
     networks:
       - gtav-network
@@ -18,3 +30,7 @@ services:
 networks:
   gtav-network:
     driver: bridge
+
+volumes:
+  mongo_data:
+    driver: local

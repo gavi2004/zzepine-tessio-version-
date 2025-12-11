@@ -4,22 +4,17 @@ FROM node:18-alpine
 # Establecer directorio de trabajo
 WORKDIR /app
 
-# Crear package.json
-RUN echo '{"name":"gtav-injector-server","version":"1.0.7","main":"version-server.js","scripts":{"start":"node version-server.js"},"dependencies":{"express":"^4.18.2","cors":"^2.8.5"}}' > package.json
+# Copiar package.json y lock
+COPY package*.json ./
 
-# Instalar dependencias
-RUN npm install
+# Instalar dependencias (ci si hay lock)
+RUN npm ci || npm i
 
-# Copiar archivos necesarios
-COPY version-server.js ./
-COPY config.json ./
+# Copiar el resto del proyecto
+COPY . .
 
-# Crear directorio y archivos de interfaz web
-RUN mkdir -p web-interface && \
-    echo '<!DOCTYPE html><html><head><title>GTAV Version Server</title></head><body><h1>GTAV Version Server</h1><p>Server running on port 4569</p><p>API: /api/version | /api/validate</p></body></html>' > web-interface/index.html
-
-# Exponer puerto 4569
+# Exponer puerto
 EXPOSE 4569
 
-# Comando para iniciar el servidor
+# Iniciar
 CMD ["node", "version-server.js"]

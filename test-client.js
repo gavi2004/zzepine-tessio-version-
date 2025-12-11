@@ -1,7 +1,7 @@
 const http = require('http');
 
 // Configuración
-const SERVER_URL = 'http://localhost:3000';
+const SERVER_URL = 'http://localhost:4569';
 const TEST_VERSION = '1.0.7'; // Versión a probar
 
 console.log('🧪 CLIENTE DE PRUEBA - VALIDACIÓN DE VERSIONES');
